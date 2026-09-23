@@ -6,6 +6,9 @@ extends SceneTree
 ## Exits with code 1 if any check fails.
 
 const TEST_DIR := "res://tests"
+## Scratch space for settings and layouts written during tests, so tests
+## never touch the player's own files.
+const SCRATCH := "user://test_scratch"
 
 var _done := false
 var _errors := ErrorLog.new()
@@ -46,6 +49,25 @@ func _process(_delta: float) -> bool:
 	return false
 
 
+## Fresh settings (defaults, not saved) and an empty layouts folder.
+func _reset_state() -> void:
+	_clear_dir(SCRATCH.path_join("layouts"))
+	KitLayout.dir = SCRATCH.path_join("layouts")
+	var settings := root.get_node_or_null(^"Settings")
+	if settings:
+		settings.path = SCRATCH.path_join("settings.cfg")
+		settings.autosave = false
+		DirAccess.remove_absolute(settings.path)
+		settings.load_settings()
+		settings.apply_all()
+
+
+static func _clear_dir(path: String) -> void:
+	DirAccess.make_dir_recursive_absolute(path)
+	for file in DirAccess.get_files_at(path):
+		DirAccess.remove_absolute(path.path_join(file))
+
+
 func _run_all() -> int:
 	var files := Array(DirAccess.get_files_at(TEST_DIR)).filter(
 		func(f: String) -> bool: return f.begins_with("test_") and f.ends_with(".gd") and f != "test_case.gd")
@@ -65,6 +87,7 @@ func _run_all() -> int:
 			var case: TestCase = script.new()
 			case.tree = self
 			case.current_test = "%s::%s" % [file.get_basename(), name]
+			_reset_state()
 			_errors.take()
 			case.call(name)
 			case.cleanup()

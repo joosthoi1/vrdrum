@@ -4,28 +4,18 @@
 [ext_resource type="PackedScene" path="res://scenes/kit/drum_kit.tscn" id="2_kit"]
 [ext_resource type="Script" path="res://scripts/ui/debug_overlay.gd" id="3_overlay"]
 [ext_resource type="Script" path="res://scripts/kit/pedal_input.gd" id="4_pedals"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
-sky_top_color = Color(0.18, 0.2, 0.28, 1)
-sky_horizon_color = Color(0.45, 0.42, 0.4, 1)
-ground_bottom_color = Color(0.1, 0.09, 0.08, 1)
-ground_horizon_color = Color(0.45, 0.42, 0.4, 1)
-
-[sub_resource type="Sky" id="Sky_main"]
-sky_material = SubResource("ProceduralSkyMaterial_sky")
+[ext_resource type="PackedScene" path="res://scenes/room.tscn" id="5_room"]
 
 [sub_resource type="Environment" id="Environment_main"]
-background_mode = 2
-sky = SubResource("Sky_main")
-ambient_light_source = 3
+background_mode = 1
+background_color = Color(0.08, 0.08, 0.09, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.58, 0.54, 1)
+ambient_light_energy = 0.55
 tonemap_mode = 2
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
-size = Vector2(8, 8)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.3, 0.24, 0.2, 1)
-roughness = 0.9
+ssao_enabled = false
+glow_enabled = true
+glow_intensity = 0.4
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -33,13 +23,7 @@ script = ExtResource("1_main")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_main")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
-rotation = Vector3(-0.9, 0.5, 0)
-shadow_enabled = true
-
-[node name="Floor" type="MeshInstance3D" parent="."]
-mesh = SubResource("PlaneMesh_floor")
-surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+[node name="Room" parent="." instance=ExtResource("5_room")]
 
 [node name="DrumKit" parent="." instance=ExtResource("2_kit")]
 
@@ -57,3 +41,13 @@ outline_size = 8
 text = "debug"
 script = ExtResource("3_overlay")
 kit_path = NodePath("../DrumKit")
+
+[node name="EditHint" type="Label3D" parent="."]
+position = Vector3(0, 1.2, -1.4)
+pixel_size = 0.0012
+billboard = 1
+no_depth_test = true
+modulate = Color(0.55, 0.9, 1, 1)
+font_size = 40
+outline_size = 10
+text = "Editing the kit"

@@ -31,9 +31,31 @@ Your decisions:
     - Check that trigger pedals feel usable.
     - Tune the choke distance.
 
+- **M3 (comfort and customization):** implemented; needs checking on the headset.
+  - Settings (`Settings` autoload, saved to `user://settings.cfg`):
+    - hit sensitivity and dynamics
+    - stick length and angle
+    - master and per-group volumes (Kick / Snare / Toms / HiHat / Cymbals buses)
+    - spatial audio amount
+    - hit highlights on or off
+    - left-handed kit (the layout is mirrored and the pedal triggers are swapped)
+    - hi-hat pedal inversion
+  - Menu: one `SettingsMenu` control. In VR it's shown on a world-space panel (`UiPanel3D`): the sticks are laser pointers and the trigger clicks. On desktop it's an overlay.
+  - Kit editor (`KitEditor`): in VR, touch a piece with a stick tip and hold the trigger to carry it. On desktop, drag pieces and scroll to raise or tilt them.
+  - Layouts (`KitLayout`): stored right-handed, with default and compact presets and 3 save slots. The current layout is restored at startup.
+  - Placement: B/Y height calibration, "kit higher / lower" buttons, and "recenter kit on me" (VR).
+  - A practice room with walls, acoustic panels, a rug, a window and lamps.
+- **Sound upgrade:** the synthesized placeholders were replaced by recorded samples from Karoryfer's CC0 Big Rusty Drums.
+  - The samples are mixed to mono by `tools/build_sample_kit.py`.
+  - The recorded velocity layers carry the dynamics.
+  - Voices are positional.
+  - The synth remains as a fallback.
+- **Hit highlights:** the zone that was hit lights up: drum head or hoop, and the cymbal's bell, bow or edge ring (hi-hat included).
+
 Changes from the original plan:
 - Tests use a small built-in runner (`tests/run_tests.gd`) instead of the GUT addon, so the project has no third-party dependencies.
-- There is one shared audio bus with a compressor and reverb, not one bus per drum group. Per-group buses can come with the mixer settings in M3.
+- Kit layouts are JSON files under `user://layouts/` rather than `.tres` resources.
+- `kit.json` (the sample manifest) is a non-resource file, so the M4 export preset must include `*.json` files.
 - Sounds are synthesized at startup (`scripts/audio/drum_synth.gd`) as placeholders. A CC0 multi-sampled kit can replace them by filling a `DrumSampleBank` with the same articulation keys (`snare/head`, `snare/rim`, ...).
 
 ---
@@ -119,7 +141,7 @@ Everything is rebindable, and left-handed kit layouts are supported.
   - pads can optionally flash, which helps with tracking and timing
 
 ## 3. Project layout (Godot 4.7)
-This layout is the target. The M0–M2 parts exist so far.
+This layout is the target. The M0–M3 parts exist so far.
 ```
 project.godot
 openxr_action_map.tres        # stick pose, triggers (kick/hh), menu, grip; multi-profile bindings

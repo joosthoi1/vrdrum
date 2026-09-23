@@ -15,6 +15,13 @@ signal choked(group: StringName)
 
 const GROUP := &"drum_pieces"
 
+## Global hit sensitivity from the settings: above 1, less force is needed
+## for a loud hit.
+static var sensitivity := 1.0
+## Global scale on [member velocity_exponent] from the settings: above 1
+## makes loud hits harder to reach, below 1 easier.
+static var dynamics := 1.0
+
 @export var piece_id: StringName = &"snare"
 ## Zone names, innermost first. Must match [member zone_outer_radii] in length.
 ## Leave empty for pieces sticks can't hit (the kick).
@@ -84,7 +91,8 @@ func register_hit(stick_id: int, point: Vector3, tip_velocity: Vector3) -> DrumH
 	var zone := zone_at(point)
 	if speed < min_hit_speed or zone < 0:
 		return null
-	var intensity := HitMath.intensity_from_speed(speed, min_hit_speed, max_hit_speed, velocity_exponent)
+	var loud_speed := maxf(max_hit_speed / sensitivity, min_hit_speed + 0.1)
+	var intensity := HitMath.intensity_from_speed(speed, min_hit_speed, loud_speed, velocity_exponent * dynamics)
 	return emit_hit(_zone_name(zone), intensity, speed, point, stick_id)
 
 
@@ -116,6 +124,11 @@ func choke() -> void:
 
 func is_armed(stick_id: int) -> bool:
 	return _armed.get(stick_id, true)
+
+
+## Re-arms every stick, e.g. after the piece was moved.
+func reset_arming() -> void:
+	_armed.clear()
 
 
 ## Zone name reported for a strike. Overridden where the sound depends on more

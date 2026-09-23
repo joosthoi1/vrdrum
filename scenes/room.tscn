@@ -1,0 +1,164 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_floor"]
+albedo_color = Color(0.42, 0.29, 0.19, 1)
+roughness = 0.55
+
+[sub_resource type="PlaneMesh" id="Mesh_floor"]
+size = Vector2(5, 5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_rug"]
+albedo_color = Color(0.2, 0.22, 0.32, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="Mesh_rug"]
+size = Vector2(2.4, 2.1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wall"]
+albedo_color = Color(0.72, 0.69, 0.64, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_wall_long"]
+size = Vector3(5, 2.8, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_wall_side"]
+size = Vector3(0.1, 2.8, 5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ceiling"]
+albedo_color = Color(0.85, 0.84, 0.82, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="Mesh_ceiling"]
+size = Vector3(5, 0.1, 5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_panel"]
+albedo_color = Color(0.16, 0.17, 0.2, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="Mesh_panel"]
+size = Vector3(0.6, 1.2, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_panel_side"]
+size = Vector3(0.06, 1.2, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_window"]
+albedo_color = Color(0.75, 0.85, 1, 1)
+emission_enabled = true
+emission = Color(0.7, 0.82, 1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="BoxMesh" id="Mesh_window"]
+size = Vector3(0.04, 1.1, 1.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_lamp"]
+albedo_color = Color(1, 0.95, 0.85, 1)
+emission_enabled = true
+emission = Color(1, 0.9, 0.75, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="CylinderMesh" id="Mesh_lamp"]
+top_radius = 0.18
+bottom_radius = 0.18
+height = 0.04
+
+[node name="Room" type="Node3D"]
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0, -0.5)
+mesh = SubResource("Mesh_floor")
+surface_material_override/0 = SubResource("Mat_floor")
+
+[node name="Rug" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.004, -0.45)
+mesh = SubResource("Mesh_rug")
+surface_material_override/0 = SubResource("Mat_rug")
+
+[node name="BackWall" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.4, -3.0)
+mesh = SubResource("Mesh_wall_long")
+surface_material_override/0 = SubResource("Mat_wall")
+
+[node name="FrontWall" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.4, 2.0)
+mesh = SubResource("Mesh_wall_long")
+surface_material_override/0 = SubResource("Mat_wall")
+
+[node name="LeftWall" type="MeshInstance3D" parent="."]
+position = Vector3(-2.5, 1.4, -0.5)
+mesh = SubResource("Mesh_wall_side")
+surface_material_override/0 = SubResource("Mat_wall")
+
+[node name="RightWall" type="MeshInstance3D" parent="."]
+position = Vector3(2.5, 1.4, -0.5)
+mesh = SubResource("Mesh_wall_side")
+surface_material_override/0 = SubResource("Mat_wall")
+
+[node name="Ceiling" type="MeshInstance3D" parent="."]
+position = Vector3(0, 2.8, -0.5)
+mesh = SubResource("Mesh_ceiling")
+surface_material_override/0 = SubResource("Mat_ceiling")
+
+[node name="Panel1" type="MeshInstance3D" parent="."]
+position = Vector3(-1.5, 1.5, -2.92)
+mesh = SubResource("Mesh_panel")
+surface_material_override/0 = SubResource("Mat_panel")
+
+[node name="Panel2" type="MeshInstance3D" parent="."]
+position = Vector3(-0.5, 1.5, -2.92)
+mesh = SubResource("Mesh_panel")
+surface_material_override/0 = SubResource("Mat_panel")
+
+[node name="Panel3" type="MeshInstance3D" parent="."]
+position = Vector3(0.5, 1.5, -2.92)
+mesh = SubResource("Mesh_panel")
+surface_material_override/0 = SubResource("Mat_panel")
+
+[node name="Panel4" type="MeshInstance3D" parent="."]
+position = Vector3(1.5, 1.5, -2.92)
+mesh = SubResource("Mesh_panel")
+surface_material_override/0 = SubResource("Mat_panel")
+
+[node name="Panel5" type="MeshInstance3D" parent="."]
+position = Vector3(2.42, 1.5, -1.8)
+mesh = SubResource("Mesh_panel_side")
+surface_material_override/0 = SubResource("Mat_panel")
+
+[node name="Panel6" type="MeshInstance3D" parent="."]
+position = Vector3(2.42, 1.5, -0.6)
+mesh = SubResource("Mesh_panel_side")
+surface_material_override/0 = SubResource("Mat_panel")
+
+[node name="Window" type="MeshInstance3D" parent="."]
+position = Vector3(-2.44, 1.6, -1.0)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_window")
+cast_shadow = 0
+
+[node name="WindowLight" type="OmniLight3D" parent="."]
+position = Vector3(-2.0, 1.6, -1.0)
+light_color = Color(0.75, 0.85, 1, 1)
+light_energy = 0.6
+omni_range = 3.5
+
+[node name="Lamp" type="MeshInstance3D" parent="."]
+position = Vector3(0, 2.73, -0.6)
+mesh = SubResource("Mesh_lamp")
+surface_material_override/0 = SubResource("Mat_lamp")
+cast_shadow = 0
+
+[node name="LampLight" type="OmniLight3D" parent="."]
+position = Vector3(0, 2.55, -0.6)
+light_color = Color(1, 0.9, 0.78, 1)
+light_energy = 1.6
+shadow_enabled = true
+shadow_bias = 0.05
+shadow_opacity = 0.55
+shadow_blur = 2.0
+omni_range = 6.0
+omni_attenuation = 0.8
+
+[node name="FillLight" type="OmniLight3D" parent="."]
+position = Vector3(0.3, 2.2, 1.2)
+light_color = Color(1, 0.92, 0.82, 1)
+light_energy = 0.5
+omni_range = 5.0

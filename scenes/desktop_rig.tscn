@@ -15,11 +15,13 @@ fov = 70.0
 [node name="LeftStick" parent="." instance=ExtResource("2_stick")]
 stick_id = 0
 grip_pitch_degrees = -40.0
+follow_angle_setting = false
 haptics_enabled = false
 
 [node name="RightStick" parent="." instance=ExtResource("2_stick")]
 stick_id = 1
 grip_pitch_degrees = -40.0
+follow_angle_setting = false
 haptics_enabled = false
 
 [node name="HUD" type="CanvasLayer" parent="."]

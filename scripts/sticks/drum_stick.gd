@@ -15,11 +15,22 @@ signal struck(hit: DrumHit)
 	set(value):
 		grip_pitch_degrees = value
 		rotation_degrees.x = value
+## Distance from the grip to the tip, in metres.
+@export var length := 0.32:
+	set(value):
+		length = value
+		_apply_length()
+## Take length (and angle, if [member follow_angle_setting]) from the
+## Settings autoload.
+@export var follow_settings := true
+@export var follow_angle_setting := true
 ## Tip travel above this in one frame is treated as a tracking glitch.
 @export var max_frame_travel := 0.5
 @export var haptics_enabled := true
 @export var haptic_duration := 0.03
 
+## Off while editing the kit layout: the stick then never hits anything.
+var detecting := true
 ## Tip velocity over the last frame, in m/s (world space).
 var tip_velocity := Vector3.ZERO
 
@@ -33,6 +44,13 @@ func _ready() -> void:
 	rotation_degrees.x = grip_pitch_degrees
 	# Run after whatever drives the stick (desktop rig, XR controller updates).
 	process_priority = 100
+	var settings := get_node_or_null(^"/root/Settings")
+	if follow_settings and settings:
+		length = settings.get_value(&"stick_length")
+		if follow_angle_setting:
+			grip_pitch_degrees = settings.get_value(&"stick_angle")
+		settings.changed.connect(_on_setting_changed)
+	_apply_length()
 
 
 func _process(delta: float) -> void:
@@ -61,6 +79,31 @@ func step(delta: float) -> DrumHit:
 	return _detect(p0, tip)
 
 
+## Moves the tip marker and resizes the stick model: the butt stays 8 cm
+## behind the grip, the tip is [member length] in front of it.
+func _apply_length() -> void:
+	if not is_inside_tree():
+		return
+	var tip := get_node_or_null(^"Tip") as Node3D
+	var mesh := get_node_or_null(^"Mesh") as MeshInstance3D
+	if tip:
+		tip.position = Vector3(0, 0, -length)
+	if mesh and mesh.mesh is CylinderMesh:
+		var cylinder := (mesh.mesh as CylinderMesh).duplicate() as CylinderMesh
+		cylinder.height = length + 0.08
+		mesh.mesh = cylinder
+		mesh.position = Vector3(0, 0, (0.08 - length) / 2.0)
+	reset_tracking()
+
+
+func _on_setting_changed(key: StringName, value: Variant) -> void:
+	if key == &"stick_length":
+		length = value
+	elif key == &"stick_angle" and follow_angle_setting:
+		grip_pitch_degrees = value
+		reset_tracking()
+
+
 ## Forget the previous tip position, e.g. after teleporting the stick.
 func reset_tracking() -> void:
 	_has_prev = false
@@ -68,6 +111,8 @@ func reset_tracking() -> void:
 
 
 func _detect(p0: Vector3, p1: Vector3) -> DrumHit:
+	if not detecting:
+		return null
 	var best: DrumPiece = null
 	var best_t := INF
 	# Every piece must see every frame so it can re-arm; only the earliest

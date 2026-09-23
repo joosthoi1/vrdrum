@@ -15,6 +15,8 @@ extends Node3D
 @export var stick_spacing := 0.07
 ## Aim at the piece under the mouse. Off in tests, where there is no mouse.
 @export var follow_mouse := true
+## Off while the menu or the kit editor is using the mouse.
+var input_enabled := true
 
 ## Point strokes land on, and the surface normal there.
 var aim := Vector3(0.0, 0.75, -0.35)
@@ -63,6 +65,8 @@ func strike(index: int, soft: bool = false) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not input_enabled:
+		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			strike(1, event.shift_pressed)
@@ -129,7 +133,7 @@ func _place_tip(i: int, tip: Vector3) -> void:
 
 
 func _update_aim() -> void:
-	if not follow_mouse:
+	if not follow_mouse or not input_enabled:
 		return
 	var viewport := get_viewport()
 	if viewport == null or viewport.get_visible_rect().size == Vector2.ZERO:

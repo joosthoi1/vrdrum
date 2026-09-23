@@ -19,6 +19,7 @@ driver/output_latency=10
 [autoload]
 
 DrumAudio="*res://scripts/audio/drum_audio.gd"
+Settings="*res://scripts/settings/settings.gd"
 
 [rendering]
 
