@@ -27,7 +27,7 @@ func _run_all() -> int:
 	var failed := 0
 	for file in files:
 		var script: GDScript = load(TEST_DIR.path_join(file))
-		if script == null:
+		if script == null or not script.can_instantiate():
 			printerr("FAIL %s: could not load" % file)
 			failed += 1
 			continue

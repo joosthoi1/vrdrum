@@ -7,10 +7,10 @@
 script = ExtResource("1_rig")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-position = Vector3(0, 1.35, 0.3)
-rotation = Vector3(-0.74, 0, 0)
+position = Vector3(0, 1.55, 0.55)
+rotation = Vector3(-0.61, 0, 0)
 current = true
-fov = 60.0
+fov = 70.0
 
 [node name="LeftStick" parent="." instance=ExtResource("2_stick")]
 stick_id = 0
@@ -25,10 +25,14 @@ haptics_enabled = false
 [node name="HUD" type="CanvasLayer" parent="."]
 
 [node name="Help" type="Label" parent="HUD"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = 16.0
-offset_right = 600.0
-offset_bottom = 120.0
-text = "Desktop mode (no headset found)
-Left click / J: right stick    Right click / F: left stick
-Hold Shift: soft stroke    F3: debug overlay"
+offset_top = -96.0
+offset_right = 700.0
+offset_bottom = -16.0
+grow_vertical = 0
+text = "Desktop mode (no headset found). Point at a drum or cymbal.
+Left click / J: right stick    Right click / F: left stick    Hold Shift: soft
+Space: kick    Hold V: close hi-hat    F3: debug overlay"

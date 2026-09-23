@@ -1,6 +1,14 @@
 extends TestCase
 
 
+func audio() -> Node:
+	var node := tree.root.get_node_or_null(^"DrumAudio")
+	check(node != null, "DrumAudio autoload present")
+	if node:
+		node.wait_until_ready()
+	return node
+
+
 func test_layer_selection_and_round_robin() -> void:
 	var bank := DrumSampleBank.new()
 	var soft := [AudioStreamWAV.new(), AudioStreamWAV.new()]
@@ -26,7 +34,7 @@ func test_gain_curve() -> void:
 
 
 func test_synth_render() -> void:
-	var params := DrumSynth.snare_params(1.0, 0)
+	var params := DrumSynth.params_for(&"snare/head", 1.0, 0)
 	var wav := DrumSynth.render(params, 7)
 	var expected_len := int(params.duration * DrumSynth.MIX_RATE) * 2
 	check_eq(wav.data.size(), expected_len, "16-bit mono length")
@@ -37,16 +45,53 @@ func test_synth_render() -> void:
 	check_eq(DrumSynth.render(params, 7).data, wav.data, "deterministic for a seed")
 
 
-func test_default_bank_covers_snare() -> void:
-	var bank := DrumSynth.build_default_bank()
-	check_eq(bank.layer_count(&"snare/head"), 3)
-	check_eq(bank.layer_count(&"snare/rim"), 3)
+func test_every_articulation_has_params() -> void:
+	for spec in DrumSynth.articulations():
+		var params := DrumSynth.params_for(spec[0], 1.0, 0)
+		check(params.get("duration", 0.0) >= 0.1, "%s has a real sound" % spec[0])
+
+
+func test_bank_covers_every_articulation() -> void:
+	var node := audio()
+	if node == null:
+		return
+	for spec in DrumSynth.articulations():
+		check_eq(node.bank.layer_count(spec[0]), spec[1], "%s layers" % spec[0])
 
 
 func test_voice_pool_never_runs_out() -> void:
-	var audio := tree.root.get_node_or_null(^"DrumAudio")
-	check(audio != null, "DrumAudio autoload present")
-	if audio == null:
+	var node := audio()
+	if node == null:
 		return
-	for i in 50:
-		check(audio.play(&"snare/head", 0.5) != null, "voice %d" % i)
+	for i in 100:
+		check(node.play(&"snare/head", 0.5) != null, "voice %d" % i)
+
+
+func test_choke_only_hits_its_group() -> void:
+	var node := audio()
+	if node == null:
+		return
+	node.choke(&"crash")
+	node.choke(&"ride")
+	node.play(&"crash/bow", 1.0, &"crash")
+	node.play(&"crash/edge", 1.0, &"crash")
+	node.play(&"ride/bow", 1.0, &"ride")
+	check_eq(node.choke(&"crash"), 2, "both crash voices choked")
+	check_eq(node.choke(&"crash"), 0, "already choked")
+	check_eq(node.choke(&"ride"), 1, "ride untouched by crash choke")
+
+
+func test_hit_that_chokes_cuts_the_group_first() -> void:
+	var node := audio()
+	if node == null:
+		return
+	node.choke(&"hihat")
+	node.play(&"hihat/open", 1.0, &"hihat")
+	var chick := DrumHit.new()
+	chick.piece_id = &"hihat"
+	chick.zone = &"pedal"
+	chick.intensity = 0.7
+	chick.choke_group = &"hihat"
+	chick.chokes = &"hihat"
+	check(node.play_hit(chick) != null, "chick plays")
+	check_eq(node.choke(&"hihat"), 1, "only the chick is left ringing")

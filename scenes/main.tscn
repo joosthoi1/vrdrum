@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/kit/drum_kit.tscn" id="2_kit"]
 [ext_resource type="Script" path="res://scripts/ui/debug_overlay.gd" id="3_overlay"]
+[ext_resource type="Script" path="res://scripts/kit/pedal_input.gd" id="4_pedals"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.18, 0.2, 0.28, 1)
@@ -42,8 +43,13 @@ surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 
 [node name="DrumKit" parent="." instance=ExtResource("2_kit")]
 
+[node name="Pedals" type="Node" parent="."]
+script = ExtResource("4_pedals")
+kick_path = NodePath("../DrumKit/Kick")
+hihat_path = NodePath("../DrumKit/HiHat")
+
 [node name="DebugOverlay" type="Label3D" parent="."]
-position = Vector3(0, 1.2, -0.7)
+position = Vector3(0, 1.45, -1.0)
 pixel_size = 0.001
 billboard = 1
 font_size = 40

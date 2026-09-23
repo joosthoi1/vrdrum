@@ -11,6 +11,7 @@ var rig: Node3D
 
 @onready var kit: DrumKit = $DrumKit
 @onready var debug_overlay: Label3D = $DebugOverlay
+@onready var pedals: Node = $Pedals
 
 
 func _ready() -> void:
@@ -18,6 +19,8 @@ func _ready() -> void:
 		rig = XR_RIG.instantiate()
 		rig.calibrate_requested.connect(kit.calibrate_height)
 		rig.debug_toggle_requested.connect(debug_overlay.toggle)
+		pedals.left_controller = rig.get_node(^"LeftHand")
+		pedals.right_controller = rig.get_node(^"RightHand")
 	else:
 		rig = DESKTOP_RIG.instantiate()
 	add_child(rig)

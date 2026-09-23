@@ -6,14 +6,16 @@ See [docs/PLAN.md](docs/PLAN.md) for the technical design and milestones.
 
 ## Status
 
-M0 (project setup) and M1 (one snare that feels great) are in progress:
+M0 (project setup), M1 (one snare) and M2 (full kit) are built:
 
-- Sticks attached to both controllers.
-- A snare with head and rim zones, detected with a swept tip test so fast strokes aren't missed.
-- 3 velocity layers with round-robin variations, using placeholder synthesized sounds.
-- Controller haptics.
-- A debug overlay with hit speed and frame rate.
-- A desktop fallback mode for testing without a headset.
+- **The kit:** kick, snare (head and rim), hi-hat, two rack toms, a floor tom, crash (bow and edge) and ride (bell, bow and edge).
+- **Hit detection:** a swept stick-tip test, so fast strokes aren't missed. Strike speed sets the volume.
+- **Hi-hat:** the pedal sets closed, half-open or open. Closing it plays the foot "chick" and cuts off a ringing open hat.
+- **Cymbals:** they wobble when hit. Touching a cymbal's edge with your hand (controller) chokes it.
+- **Sound:** placeholder sounds are synthesized on first launch (about 3 s) and then cached, so later launches are instant.
+- **Other:** controller haptics, a debug overlay, and a desktop mode for testing without a headset.
+
+The sounds are synthesized placeholders, not recordings, and none of this has been tuned on a headset yet.
 
 ## Running
 
@@ -30,6 +32,9 @@ VR controls:
 | Input | Action |
 |---|---|
 | Swing the sticks | Play |
+| Right trigger | Kick |
+| Left trigger (hold) | Close the hi-hat (half-pressed = half-open) |
+| Hand on a cymbal's edge | Choke the cymbal |
 | B / Y (menu on Vive or WMR) | Move the kit to just below where your sticks are held |
 | Thumbstick click | Toggle the debug overlay |
 
@@ -37,10 +42,15 @@ With no headset (or when launched with `-- --desktop`), you get a desktop view:
 
 | Input | Action |
 |---|---|
+| Mouse | Aim at a drum or cymbal |
 | Left click / `J` | Right stick |
 | Right click / `F` | Left stick |
 | Hold `Shift` | Soft stroke |
+| `Space` | Kick |
+| Hold `V` | Close the hi-hat |
 | `F3` | Debug overlay |
+
+Keyboard and gamepad pedal bindings also work in VR. `Space`/`V` suit USB foot switches, and a gamepad's triggers work too.
 
 ## Tests
 

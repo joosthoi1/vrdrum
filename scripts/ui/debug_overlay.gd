@@ -1,21 +1,32 @@
 extends Label3D
-## World-space readout of frame rate and the last hit, for tuning detection.
-## Toggle with F3 or either thumbstick click.
+## World-space readout of frame rate, pedal state and the last hit, for tuning
+## detection. Toggle with F3 or either thumbstick click.
 
 @export var kit_path: NodePath
 
+var _kit: DrumKit
+var _hihat: HiHat
 var _last := "no hits yet"
 
 
 func _ready() -> void:
-	var kit := get_node_or_null(kit_path) as DrumKit
-	if kit:
-		kit.hit.connect(_on_hit)
+	_kit = get_node_or_null(kit_path) as DrumKit
+	if _kit:
+		_kit.hit.connect(_on_hit)
+		_hihat = _kit.piece(&"hihat") as HiHat
 
 
 func _process(_delta: float) -> void:
-	if visible:
-		text = "%d fps\n%s" % [Engine.get_frames_per_second(), _last]
+	if not visible:
+		return
+	var lines := ["%d fps" % Engine.get_frames_per_second()]
+	var audio := get_node_or_null(^"/root/DrumAudio")
+	if audio and not audio.is_ready():
+		lines.append("generating drum sounds...")
+	if _hihat:
+		lines.append("hi-hat %s (%.2f open)" % [_hihat.state_name(), _hihat.openness])
+	lines.append(_last)
+	text = "\n".join(lines)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -28,4 +39,5 @@ func toggle() -> void:
 
 
 func _on_hit(h: DrumHit) -> void:
-	_last = "%s  %.2f m/s  vel %.2f  stick %d" % [h.articulation(), h.speed, h.intensity, h.stick_id]
+	var who := "pedal" if h.stick_id < 0 else "stick %d" % h.stick_id
+	_last = "%s  %.2f m/s  vel %.2f  %s" % [h.articulation(), h.speed, h.intensity, who]

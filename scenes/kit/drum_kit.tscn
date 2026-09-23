@@ -2,10 +2,117 @@
 
 [ext_resource type="Script" path="res://scripts/kit/drum_kit.gd" id="1_kit"]
 [ext_resource type="PackedScene" path="res://scenes/kit/pieces/snare.tscn" id="2_snare"]
+[ext_resource type="Script" path="res://scripts/kit/drum_piece.gd" id="3_piece"]
+[ext_resource type="Script" path="res://scripts/kit/drum_body.gd" id="4_drum_body"]
+[ext_resource type="Script" path="res://scripts/kit/hihat.gd" id="5_hihat"]
+[ext_resource type="Script" path="res://scripts/kit/cymbal.gd" id="6_cymbal"]
+[ext_resource type="Script" path="res://scripts/kit/cymbal_body.gd" id="7_cymbal_body"]
 
 [node name="DrumKit" type="Node3D"]
 script = ExtResource("1_kit")
 
+[node name="Kick" type="Node3D" parent="."]
+position = Vector3(0.05, 0.28, -0.8)
+rotation = Vector3(1.5707964, 0, 0)
+script = ExtResource("3_piece")
+piece_id = &"kick"
+zone_names = PackedStringArray()
+zone_outer_radii = PackedFloat32Array()
+
+[node name="Body" type="Node3D" parent="Kick"]
+script = ExtResource("4_drum_body")
+radius = 0.28
+depth = 0.4
+stand = false
+
 [node name="Snare" parent="." instance=ExtResource("2_snare")]
 position = Vector3(-0.05, 0.75, -0.35)
 rotation = Vector3(0.14, 0, 0)
+
+[node name="HiHat" type="Node3D" parent="."]
+position = Vector3(-0.42, 0.95, -0.38)
+rotation = Vector3(0.05, 0, 0)
+script = ExtResource("5_hihat")
+
+[node name="Top" type="Node3D" parent="HiHat"]
+script = ExtResource("7_cymbal_body")
+radius = 0.178
+bell_radius = 0.045
+stand = false
+follow_hihat = true
+
+[node name="Bottom" type="Node3D" parent="HiHat"]
+position = Vector3(0, -0.012, 0)
+script = ExtResource("7_cymbal_body")
+radius = 0.178
+bell_radius = 0.045
+flipped = true
+stiffness = 400.0
+hit_impulse = 0.0
+
+[node name="Tom1" type="Node3D" parent="."]
+position = Vector3(-0.13, 0.95, -0.62)
+rotation = Vector3(0.26, 0, 0)
+script = ExtResource("3_piece")
+piece_id = &"tom1"
+zone_names = PackedStringArray("head")
+zone_outer_radii = PackedFloat32Array(0.17)
+
+[node name="Body" type="Node3D" parent="Tom1"]
+script = ExtResource("4_drum_body")
+radius = 0.152
+depth = 0.25
+
+[node name="Tom2" type="Node3D" parent="."]
+position = Vector3(0.22, 0.95, -0.62)
+rotation = Vector3(0.26, 0, 0)
+script = ExtResource("3_piece")
+piece_id = &"tom2"
+zone_names = PackedStringArray("head")
+zone_outer_radii = PackedFloat32Array(0.185)
+
+[node name="Body" type="Node3D" parent="Tom2"]
+script = ExtResource("4_drum_body")
+radius = 0.165
+depth = 0.27
+
+[node name="Tom3" type="Node3D" parent="."]
+position = Vector3(0.46, 0.7, -0.22)
+rotation = Vector3(0.05, 0, 0)
+script = ExtResource("3_piece")
+piece_id = &"tom3"
+zone_names = PackedStringArray("head")
+zone_outer_radii = PackedFloat32Array(0.22)
+
+[node name="Body" type="Node3D" parent="Tom3"]
+script = ExtResource("4_drum_body")
+radius = 0.2
+depth = 0.4
+
+[node name="Crash" type="Node3D" parent="."]
+position = Vector3(-0.48, 1.22, -0.72)
+rotation = Vector3(0.21, 0, 0)
+script = ExtResource("6_cymbal")
+piece_id = &"crash"
+zone_names = PackedStringArray("bow", "edge")
+zone_outer_radii = PackedFloat32Array(0.17, 0.235)
+choke_group = &"crash"
+
+[node name="Body" type="Node3D" parent="Crash"]
+script = ExtResource("7_cymbal_body")
+radius = 0.23
+bell_radius = 0.06
+
+[node name="Ride" type="Node3D" parent="."]
+position = Vector3(0.62, 1.08, -0.52)
+rotation = Vector3(0.15, 0, 0.12)
+script = ExtResource("6_cymbal")
+piece_id = &"ride"
+zone_names = PackedStringArray("bell", "bow", "edge")
+zone_outer_radii = PackedFloat32Array(0.065, 0.2, 0.265)
+choke_group = &"ride"
+
+[node name="Body" type="Node3D" parent="Ride"]
+script = ExtResource("7_cymbal_body")
+radius = 0.255
+bell_radius = 0.07

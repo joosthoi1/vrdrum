@@ -18,9 +18,22 @@ Your decisions:
   - Swept hit detection with re-arm, 3 velocity layers with round-robin, haptics, and a debug overlay.
   - A calibrate button that moves the kit to your stick height.
   - Still to do on PSVR2: measure latency, then tune `min_hit_speed`, `max_hit_speed`, `velocity_exponent` and the stick grip angle.
+- **M2 (full kit):** implemented; needs checking on the headset.
+  - Pieces: kick, snare (head and rim), hi-hat (closed, half-open, open and pedal "chick"), 3 toms, crash (bow and edge), ride (bell, bow and edge).
+  - Choke groups:
+    - Closing the hi-hat pedal cuts the ringing open hat.
+    - A hand (controller) at a cymbal's edge chokes that cymbal.
+  - Pedals come from the VR triggers (right = kick, left = hi-hat, analog), the keyboard (`Space`/`V`) or a gamepad's triggers. `scripts/kit/pedal_input.gd` combines them.
+  - Visuals are generated in code (`drum_body.gd`, `cymbal_body.gd`) and are also previewed in the editor. Cymbals wobble on a spring when hit.
+  - Sounds: 15 articulations are synthesized on a worker thread at startup and cached as raw PCM in `user://synth_cache`. That takes about 3 s the first time and about 25 ms after. Playback pitch varies slightly with each hit, so repeats don't sound identical.
+  - Still to do on PSVR2:
+    - Check that the default layout is comfortable to reach.
+    - Check that trigger pedals feel usable.
+    - Tune the choke distance.
 
 Changes from the original plan:
 - Tests use a small built-in runner (`tests/run_tests.gd`) instead of the GUT addon, so the project has no third-party dependencies.
+- There is one shared audio bus with a compressor and reverb, not one bus per drum group. Per-group buses can come with the mixer settings in M3.
 - Sounds are synthesized at startup (`scripts/audio/drum_synth.gd`) as placeholders. A CC0 multi-sampled kit can replace them by filling a `DrumSampleBank` with the same articulation keys (`snare/head`, `snare/rim`, ...).
 
 ---
@@ -106,7 +119,7 @@ Everything is rebindable, and left-handed kit layouts are supported.
   - pads can optionally flash, which helps with tracking and timing
 
 ## 3. Project layout (Godot 4.7)
-This layout is the target. Only the M0/M1 parts exist so far.
+This layout is the target. The M0–M2 parts exist so far.
 ```
 project.godot
 openxr_action_map.tres        # stick pose, triggers (kick/hh), menu, grip; multi-profile bindings

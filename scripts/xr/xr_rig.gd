@@ -2,7 +2,8 @@ extends XROrigin3D
 ## VR player rig: headset camera plus a drumstick in each tracked controller.
 ##
 ## B/Y recalibrates kit height to where the sticks are held; thumbstick click
-## toggles the debug overlay.
+## toggles the debug overlay. Triggers are the pedals (see pedal_input.gd).
+## The controllers are in the "hands" group so they can choke cymbals.
 
 signal calibrate_requested(tip_height: float)
 signal debug_toggle_requested
@@ -12,8 +13,9 @@ signal debug_toggle_requested
 
 
 func _ready() -> void:
-	left_hand.button_pressed.connect(_on_button_pressed)
-	right_hand.button_pressed.connect(_on_button_pressed)
+	for hand in [left_hand, right_hand]:
+		hand.button_pressed.connect(_on_button_pressed)
+		hand.add_to_group(&"hands")
 
 
 func sticks() -> Array[DrumStick]:
