@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/drum_kit.gd" id="1_kit"]
+[ext_resource type="PackedScene" path="res://scenes/kit/pieces/snare.tscn" id="2_snare"]
+
+[node name="DrumKit" type="Node3D"]
+script = ExtResource("1_kit")
+
+[node name="Snare" parent="." instance=ExtResource("2_snare")]
+position = Vector3(-0.05, 0.75, -0.35)
+rotation = Vector3(0.14, 0, 0)

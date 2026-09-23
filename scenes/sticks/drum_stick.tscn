@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/sticks/drum_stick.gd" id="1_stick"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_stick"]
+top_radius = 0.006
+bottom_radius = 0.0075
+height = 0.4
+radial_segments = 12
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.86, 0.7, 0.46, 1)
+roughness = 0.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_tip"]
+radius = 0.008
+height = 0.014
+radial_segments = 12
+rings = 6
+
+[node name="DrumStick" type="Node3D"]
+script = ExtResource("1_stick")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0, -0.12)
+rotation = Vector3(-1.5707964, 0, 0)
+mesh = SubResource("CylinderMesh_stick")
+surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+
+[node name="Tip" type="Marker3D" parent="."]
+position = Vector3(0, 0, -0.32)
+gizmo_extents = 0.02
+
+[node name="TipMesh" type="MeshInstance3D" parent="Tip"]
+mesh = SubResource("SphereMesh_tip")
+surface_material_override/0 = SubResource("StandardMaterial3D_wood")

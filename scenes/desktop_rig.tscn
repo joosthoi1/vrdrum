@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/xr/desktop_rig.gd" id="1_rig"]
+[ext_resource type="PackedScene" path="res://scenes/sticks/drum_stick.tscn" id="2_stick"]
+
+[node name="DesktopRig" type="Node3D"]
+script = ExtResource("1_rig")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 1.35, 0.3)
+rotation = Vector3(-0.74, 0, 0)
+current = true
+fov = 60.0
+
+[node name="LeftStick" parent="." instance=ExtResource("2_stick")]
+stick_id = 0
+grip_pitch_degrees = -40.0
+haptics_enabled = false
+
+[node name="RightStick" parent="." instance=ExtResource("2_stick")]
+stick_id = 1
+grip_pitch_degrees = -40.0
+haptics_enabled = false
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Help" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 600.0
+offset_bottom = 120.0
+text = "Desktop mode (no headset found)
+Left click / J: right stick    Right click / F: left stick
+Hold Shift: soft stroke    F3: debug overlay"

@@ -8,7 +8,20 @@ Your decisions:
 - **Scope:** a free-play drum kit first; a rhythm-game mode comes later.
 - **External music software:** none for now. The app is self-contained with built-in samples, so no MIDI in or out and no DAW connection.
 
-**What to do when this plan is approved:** commit this plan to the repo as `docs/PLAN.md` along with a short `README.md`, then push to `claude/vr-drumkit-game-plan-a4zxot`. The code itself gets built milestone by milestone later, when you ask for it.
+## Progress
+- **M0 (project setup):** done.
+  - Godot 4.7.2 project with OpenXR enabled.
+  - Generated action map with 8 controller profiles.
+  - XR rig, plus a desktop fallback rig.
+  - Headless tests and CI.
+- **M1 (one snare):** implemented; needs tuning on the headset.
+  - Swept hit detection with re-arm, 3 velocity layers with round-robin, haptics, and a debug overlay.
+  - A calibrate button that moves the kit to your stick height.
+  - Still to do on PSVR2: measure latency, then tune `min_hit_speed`, `max_hit_speed`, `velocity_exponent` and the stick grip angle.
+
+Changes from the original plan:
+- Tests use a small built-in runner (`tests/run_tests.gd`) instead of the GUT addon, so the project has no third-party dependencies.
+- Sounds are synthesized at startup (`scripts/audio/drum_synth.gd`) as placeholders. A CC0 multi-sampled kit can replace them by filling a `DrumSampleBank` with the same articulation keys (`snare/head`, `snare/rim`, ...).
 
 ---
 
@@ -92,11 +105,12 @@ Everything is rebindable, and left-handed kit layouts are supported.
   - cymbals wobble on a spring
   - pads can optionally flash, which helps with tracking and timing
 
-## 3. Project layout (Godot 4, latest stable 4.x)
+## 3. Project layout (Godot 4.7)
+This layout is the target. Only the M0/M1 parts exist so far.
 ```
 project.godot
 openxr_action_map.tres        # stick pose, triggers (kick/hh), menu, grip; multi-profile bindings
-addons/                       # godot-xr-tools (optional: menus/pointer), gut (tests)
+addons/                       # godot-xr-tools later if needed (menus/pointer)
 scenes/
   main.tscn                   # environment + XR rig + kit + UI
   xr_rig.tscn                 # XROrigin3D, XRCamera3D, 2x XRController3D + stick
@@ -115,8 +129,8 @@ scripts/
   settings/settings.gd        # autoload; persisted to user://settings.cfg
   settings/kit_layout.gd      # Resource: piece transforms; saved to user://layouts/
 assets/kits/, assets/models/, assets/env/
-tests/                        # GUT unit tests
-.github/workflows/ci.yml      # headless Godot: import + run GUT
+tests/                        # headless unit tests + tiny runner (run_tests.gd)
+.github/workflows/ci.yml      # headless Godot: import + run tests + smoke-run main scene
 docs/PLAN.md
 ```
 
@@ -125,7 +139,7 @@ docs/PLAN.md
 - Godot project with OpenXR enabled.
 - Action map with bindings for multiple controller types.
 - XR rig, plus a desktop fallback rig for when no headset is found.
-- Unit tests (GUT) and CI.
+- Unit tests and CI.
 - Goal: the app runs on PSVR2 through SteamVR, and your hands are tracked in an empty room.
 
 **M1 — "One snare that feels great"** (the most important milestone)
@@ -174,7 +188,7 @@ docs/PLAN.md
 | Kick and hi-hat feel unnatural on triggers | Optional USB foot switches through keyboard mapping |
 
 ## 6. Verification
-- **Unit tests** (GUT, run headless in CI):
+- **Unit tests** (run headless in CI):
   - `hit_math`: crossing detection, zone lookup, re-arm, and the velocity curve
   - kit definition loading
   - hi-hat state machine

@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/kit/drum_kit.tscn" id="2_kit"]
+[ext_resource type="Script" path="res://scripts/ui/debug_overlay.gd" id="3_overlay"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.18, 0.2, 0.28, 1)
+sky_horizon_color = Color(0.45, 0.42, 0.4, 1)
+ground_bottom_color = Color(0.1, 0.09, 0.08, 1)
+ground_horizon_color = Color(0.45, 0.42, 0.4, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+size = Vector2(8, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.3, 0.24, 0.2, 1)
+roughness = 0.9
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.9, 0.5, 0)
+shadow_enabled = true
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="DrumKit" parent="." instance=ExtResource("2_kit")]
+
+[node name="DebugOverlay" type="Label3D" parent="."]
+position = Vector3(0, 1.2, -0.7)
+pixel_size = 0.001
+billboard = 1
+font_size = 40
+outline_size = 8
+text = "debug"
+script = ExtResource("3_overlay")
+kit_path = NodePath("../DrumKit")

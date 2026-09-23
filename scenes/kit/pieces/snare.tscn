@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/drum_piece.gd" id="1_piece"]
+[ext_resource type="Script" path="res://scripts/kit/hit_flash.gd" id="2_flash"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_shell"]
+top_radius = 0.178
+bottom_radius = 0.178
+height = 0.14
+radial_segments = 48
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shell"]
+albedo_color = Color(0.55, 0.08, 0.1, 1)
+metallic = 0.3
+roughness = 0.35
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_head"]
+top_radius = 0.17
+bottom_radius = 0.17
+height = 0.004
+radial_segments = 48
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+albedo_color = Color(0.93, 0.92, 0.88, 1)
+roughness = 0.8
+
+[sub_resource type="TorusMesh" id="TorusMesh_rim"]
+inner_radius = 0.17
+outer_radius = 0.184
+rings = 48
+ring_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chrome"]
+albedo_color = Color(0.8, 0.8, 0.82, 1)
+metallic = 1.0
+roughness = 0.2
+
+[node name="Snare" type="Node3D"]
+script = ExtResource("1_piece")
+piece_id = &"snare"
+zone_names = PackedStringArray("head", "rim")
+zone_outer_radii = PackedFloat32Array(0.163, 0.195)
+
+[node name="Shell" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.075, 0)
+mesh = SubResource("CylinderMesh_shell")
+surface_material_override/0 = SubResource("StandardMaterial3D_shell")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.002, 0)
+mesh = SubResource("CylinderMesh_head")
+surface_material_override/0 = SubResource("StandardMaterial3D_head")
+script = ExtResource("2_flash")
+
+[node name="Rim" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.002, 0)
+mesh = SubResource("TorusMesh_rim")
+surface_material_override/0 = SubResource("StandardMaterial3D_chrome")

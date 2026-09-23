@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/xr/xr_rig.gd" id="1_rig"]
+[ext_resource type="PackedScene" path="res://scenes/sticks/drum_stick.tscn" id="2_stick"]
+
+[node name="XRRig" type="XROrigin3D"]
+script = ExtResource("1_rig")
+
+[node name="XRCamera3D" type="XRCamera3D" parent="."]
+position = Vector3(0, 1.6, 0)
+
+[node name="LeftHand" type="XRController3D" parent="."]
+tracker = &"left_hand"
+pose = &"grip"
+
+[node name="LeftStick" parent="LeftHand" instance=ExtResource("2_stick")]
+stick_id = 0
+
+[node name="RightHand" type="XRController3D" parent="."]
+tracker = &"right_hand"
+pose = &"grip"
+
+[node name="RightStick" parent="RightHand" instance=ExtResource("2_stick")]
+stick_id = 1
