@@ -1,0 +1,392 @@
+{
+ "source": "Karoryfer Samples - Big Rusty Drums (CC0 1.0)",
+ "url": "https://github.com/sfzinstruments/karoryfer.big-rusty-drums",
+ "articulations": {
+  "kick/head": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "kick_head_v1_rr1.wav",
+     "kick_head_v1_rr3.wav",
+     "kick_head_v1_rr4.wav"
+    ],
+    [
+     "kick_head_v2_rr1.wav",
+     "kick_head_v2_rr3.wav",
+     "kick_head_v2_rr4.wav"
+    ],
+    [
+     "kick_head_v3_rr1.wav",
+     "kick_head_v3_rr3.wav",
+     "kick_head_v3_rr4.wav"
+    ],
+    [
+     "kick_head_v4_rr1.wav",
+     "kick_head_v4_rr3.wav",
+     "kick_head_v4_rr4.wav"
+    ],
+    [
+     "kick_head_v5_rr1.wav",
+     "kick_head_v5_rr3.wav",
+     "kick_head_v5_rr4.wav"
+    ],
+    [
+     "kick_head_v6_rr1.wav",
+     "kick_head_v6_rr3.wav",
+     "kick_head_v6_rr4.wav"
+    ]
+   ]
+  },
+  "snare/head": {
+   "gain_db": -0.14,
+   "layers": [
+    [
+     "snare_head_v1_rr1.wav",
+     "snare_head_v1_rr3.wav",
+     "snare_head_v1_rr4.wav"
+    ],
+    [
+     "snare_head_v2_rr1.wav",
+     "snare_head_v2_rr3.wav",
+     "snare_head_v2_rr4.wav"
+    ],
+    [
+     "snare_head_v3_rr1.wav",
+     "snare_head_v3_rr3.wav",
+     "snare_head_v3_rr4.wav"
+    ],
+    [
+     "snare_head_v4_rr1.wav",
+     "snare_head_v4_rr3.wav",
+     "snare_head_v4_rr4.wav"
+    ],
+    [
+     "snare_head_v5_rr1.wav",
+     "snare_head_v5_rr3.wav",
+     "snare_head_v5_rr4.wav"
+    ],
+    [
+     "snare_head_v6_rr1.wav",
+     "snare_head_v6_rr3.wav",
+     "snare_head_v6_rr4.wav"
+    ]
+   ]
+  },
+  "snare/rim": {
+   "gain_db": -0.14,
+   "layers": [
+    [
+     "snare_rim_v1_rr1.wav",
+     "snare_rim_v1_rr3.wav",
+     "snare_rim_v1_rr4.wav"
+    ],
+    [
+     "snare_rim_v2_rr1.wav",
+     "snare_rim_v2_rr3.wav",
+     "snare_rim_v2_rr4.wav"
+    ],
+    [
+     "snare_rim_v3_rr1.wav",
+     "snare_rim_v3_rr3.wav",
+     "snare_rim_v3_rr4.wav"
+    ],
+    [
+     "snare_rim_v4_rr1.wav",
+     "snare_rim_v4_rr3.wav",
+     "snare_rim_v4_rr4.wav"
+    ]
+   ]
+  },
+  "tom1/head": {
+   "gain_db": -1.47,
+   "layers": [
+    [
+     "tom1_head_v1_rr1.wav",
+     "tom1_head_v1_rr3.wav",
+     "tom1_head_v1_rr4.wav"
+    ],
+    [
+     "tom1_head_v2_rr1.wav",
+     "tom1_head_v2_rr3.wav",
+     "tom1_head_v2_rr4.wav"
+    ],
+    [
+     "tom1_head_v3_rr1.wav",
+     "tom1_head_v3_rr3.wav",
+     "tom1_head_v3_rr4.wav"
+    ],
+    [
+     "tom1_head_v4_rr1.wav",
+     "tom1_head_v4_rr3.wav",
+     "tom1_head_v4_rr4.wav"
+    ],
+    [
+     "tom1_head_v5_rr1.wav",
+     "tom1_head_v5_rr3.wav",
+     "tom1_head_v5_rr4.wav"
+    ]
+   ]
+  },
+  "tom2/head": {
+   "gain_db": -2.6,
+   "layers": [
+    [
+     "tom2_head_v1_rr1.wav",
+     "tom2_head_v1_rr3.wav",
+     "tom2_head_v1_rr4.wav"
+    ],
+    [
+     "tom2_head_v2_rr1.wav",
+     "tom2_head_v2_rr3.wav",
+     "tom2_head_v2_rr4.wav"
+    ],
+    [
+     "tom2_head_v3_rr1.wav",
+     "tom2_head_v3_rr3.wav",
+     "tom2_head_v3_rr4.wav"
+    ],
+    [
+     "tom2_head_v4_rr1.wav",
+     "tom2_head_v4_rr3.wav",
+     "tom2_head_v4_rr4.wav"
+    ],
+    [
+     "tom2_head_v5_rr1.wav",
+     "tom2_head_v5_rr3.wav",
+     "tom2_head_v5_rr4.wav"
+    ]
+   ]
+  },
+  "tom3/head": {
+   "gain_db": -2.43,
+   "layers": [
+    [
+     "tom3_head_v1_rr1.wav",
+     "tom3_head_v1_rr3.wav",
+     "tom3_head_v1_rr4.wav"
+    ],
+    [
+     "tom3_head_v2_rr1.wav",
+     "tom3_head_v2_rr3.wav",
+     "tom3_head_v2_rr4.wav"
+    ],
+    [
+     "tom3_head_v3_rr1.wav",
+     "tom3_head_v3_rr3.wav",
+     "tom3_head_v3_rr4.wav"
+    ],
+    [
+     "tom3_head_v4_rr1.wav",
+     "tom3_head_v4_rr3.wav",
+     "tom3_head_v4_rr4.wav"
+    ],
+    [
+     "tom3_head_v5_rr1.wav",
+     "tom3_head_v5_rr3.wav",
+     "tom3_head_v5_rr4.wav"
+    ]
+   ]
+  },
+  "hihat/closed": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "hihat_closed_v1_rr1.wav",
+     "hihat_closed_v1_rr3.wav",
+     "hihat_closed_v1_rr4.wav"
+    ],
+    [
+     "hihat_closed_v2_rr1.wav",
+     "hihat_closed_v2_rr3.wav",
+     "hihat_closed_v2_rr4.wav"
+    ],
+    [
+     "hihat_closed_v3_rr1.wav",
+     "hihat_closed_v3_rr3.wav",
+     "hihat_closed_v3_rr4.wav"
+    ],
+    [
+     "hihat_closed_v4_rr1.wav",
+     "hihat_closed_v4_rr3.wav",
+     "hihat_closed_v4_rr4.wav"
+    ],
+    [
+     "hihat_closed_v5_rr1.wav",
+     "hihat_closed_v5_rr3.wav",
+     "hihat_closed_v5_rr4.wav"
+    ]
+   ]
+  },
+  "hihat/half": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "hihat_half_v1_rr1.wav",
+     "hihat_half_v1_rr4.wav"
+    ],
+    [
+     "hihat_half_v2_rr1.wav",
+     "hihat_half_v2_rr4.wav"
+    ],
+    [
+     "hihat_half_v3_rr1.wav",
+     "hihat_half_v3_rr4.wav"
+    ],
+    [
+     "hihat_half_v4_rr1.wav",
+     "hihat_half_v4_rr4.wav"
+    ]
+   ]
+  },
+  "hihat/open": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "hihat_open_v1_rr1.wav",
+     "hihat_open_v1_rr4.wav"
+    ],
+    [
+     "hihat_open_v2_rr1.wav",
+     "hihat_open_v2_rr4.wav"
+    ],
+    [
+     "hihat_open_v3_rr1.wav",
+     "hihat_open_v3_rr4.wav"
+    ],
+    [
+     "hihat_open_v4_rr1.wav",
+     "hihat_open_v4_rr4.wav"
+    ]
+   ]
+  },
+  "hihat/pedal": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "hihat_pedal_v1_rr1.wav",
+     "hihat_pedal_v1_rr3.wav",
+     "hihat_pedal_v1_rr4.wav"
+    ],
+    [
+     "hihat_pedal_v2_rr1.wav",
+     "hihat_pedal_v2_rr3.wav",
+     "hihat_pedal_v2_rr4.wav"
+    ],
+    [
+     "hihat_pedal_v3_rr1.wav",
+     "hihat_pedal_v3_rr3.wav",
+     "hihat_pedal_v3_rr4.wav"
+    ]
+   ]
+  },
+  "crash/bow": {
+   "gain_db": -1.68,
+   "layers": [
+    [
+     "crash_bow_v1_rr1.wav",
+     "crash_bow_v1_rr4.wav"
+    ],
+    [
+     "crash_bow_v2_rr1.wav",
+     "crash_bow_v2_rr4.wav"
+    ],
+    [
+     "crash_bow_v3_rr1.wav",
+     "crash_bow_v3_rr4.wav"
+    ],
+    [
+     "crash_bow_v4_rr1.wav",
+     "crash_bow_v4_rr4.wav"
+    ]
+   ]
+  },
+  "ride/bow": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "ride_bow_v1_rr1.wav",
+     "ride_bow_v1_rr3.wav"
+    ],
+    [
+     "ride_bow_v2_rr1.wav",
+     "ride_bow_v2_rr3.wav"
+    ],
+    [
+     "ride_bow_v3_rr1.wav",
+     "ride_bow_v3_rr3.wav"
+    ],
+    [
+     "ride_bow_v4_rr1.wav",
+     "ride_bow_v4_rr3.wav"
+    ],
+    [
+     "ride_bow_v5_rr1.wav",
+     "ride_bow_v5_rr3.wav"
+    ]
+   ]
+  },
+  "ride/bell": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "ride_bell_v1_rr1.wav",
+     "ride_bell_v1_rr4.wav"
+    ],
+    [
+     "ride_bell_v2_rr1.wav",
+     "ride_bell_v2_rr4.wav"
+    ],
+    [
+     "ride_bell_v3_rr1.wav",
+     "ride_bell_v3_rr4.wav"
+    ],
+    [
+     "ride_bell_v4_rr1.wav",
+     "ride_bell_v4_rr4.wav"
+    ]
+   ]
+  },
+  "ride/edge": {
+   "gain_db": 0.0,
+   "layers": [
+    [
+     "ride_edge_v1_rr1.wav",
+     "ride_edge_v1_rr4.wav"
+    ],
+    [
+     "ride_edge_v2_rr1.wav",
+     "ride_edge_v2_rr4.wav"
+    ],
+    [
+     "ride_edge_v3_rr1.wav",
+     "ride_edge_v3_rr4.wav"
+    ],
+    [
+     "ride_edge_v4_rr1.wav",
+     "ride_edge_v4_rr4.wav"
+    ]
+   ]
+  },
+  "crash/edge": {
+   "gain_db": -1.68,
+   "layers": [
+    [
+     "crash_bow_v1_rr1.wav",
+     "crash_bow_v1_rr4.wav"
+    ],
+    [
+     "crash_bow_v2_rr1.wav",
+     "crash_bow_v2_rr4.wav"
+    ],
+    [
+     "crash_bow_v3_rr1.wav",
+     "crash_bow_v3_rr4.wav"
+    ],
+    [
+     "crash_bow_v4_rr1.wav",
+     "crash_bow_v4_rr4.wav"
+    ]
+   ]
+  }
+ }
+}

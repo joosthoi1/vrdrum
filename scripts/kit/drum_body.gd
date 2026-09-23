@@ -1,7 +1,8 @@
 @tool
 extends Node3D
 ## Procedural drum visuals: shell, head, hoop and an optional stand pole.
-## Place under a [DrumPiece]; the head flashes when the piece is hit.
+## Place under a [DrumPiece]; the head (or the hoop, for rim hits) flashes
+## when the piece is hit.
 ## Geometry is regenerated from the exported values (also in the editor) and
 ## never saved into the scene.
 
@@ -22,11 +23,9 @@ extends Node3D
 	set(value):
 		stand = value
 		_rebuild()
-@export var flash_color := Color(1.0, 0.75, 0.3)
-@export var flash_time := 0.15
 
-var _flash := StandardMaterial3D.new()
-var _tween: Tween
+var _head_highlight: HitHighlight
+var _rim_highlight: HitHighlight
 
 
 func _ready() -> void:
@@ -60,17 +59,14 @@ func _rebuild() -> void:
 	head.radial_segments = 48
 	head.rings = 1
 	var head_instance := _add_mesh(head, _material(Color(0.93, 0.92, 0.88), 0.0, 0.8), Vector3(0, -0.002, 0))
-	_flash.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_flash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_flash.albedo_color = Color(flash_color, 0.0)
-	head_instance.material_overlay = _flash
+	_head_highlight = HitHighlight.new(head_instance)
 
 	var hoop := TorusMesh.new()
 	hoop.inner_radius = radius * 0.955
 	hoop.outer_radius = radius * 1.035
 	hoop.rings = 48
 	hoop.ring_segments = 8
-	_add_mesh(hoop, _chrome(), Vector3(0, 0.002, 0))
+	_rim_highlight = HitHighlight.new(_add_mesh(hoop, _chrome(), Vector3(0, 0.002, 0)))
 
 	if stand:
 		var pole := CylinderMesh.new()
@@ -103,8 +99,15 @@ static func _chrome() -> StandardMaterial3D:
 
 
 func _on_hit(h: DrumHit) -> void:
-	if _tween:
-		_tween.kill()
-	_flash.albedo_color = Color(flash_color, lerpf(0.25, 0.8, h.intensity))
-	_tween = create_tween()
-	_tween.tween_property(_flash, "albedo_color:a", 0.0, flash_time)
+	var part := _rim_highlight if h.zone == &"rim" else _head_highlight
+	if part:
+		part.flash(self, h.intensity)
+
+
+## Highlight strength of the head and hoop right now (for tests).
+func head_flash() -> float:
+	return _head_highlight.alpha() if _head_highlight else 0.0
+
+
+func rim_flash() -> float:
+	return _rim_highlight.alpha() if _rim_highlight else 0.0

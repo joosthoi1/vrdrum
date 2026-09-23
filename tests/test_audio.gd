@@ -51,12 +51,52 @@ func test_every_articulation_has_params() -> void:
 		check(params.get("duration", 0.0) >= 0.1, "%s has a real sound" % spec[0])
 
 
-func test_bank_covers_every_articulation() -> void:
-	var node := audio()
-	if node == null:
+func test_recorded_kit_covers_every_articulation() -> void:
+	var bank := SampleKit.load_bank()
+	check(bank != null, "recorded kit loads")
+	if bank == null:
 		return
+	check(bank.natural_dynamics, "recorded layers carry dynamics")
 	for spec in DrumSynth.articulations():
-		check_eq(node.bank.layer_count(spec[0]), spec[1], "%s layers" % spec[0])
+		check(bank.layer_count(spec[0]) >= 3, "%s has velocity layers" % spec[0])
+
+
+func test_autoload_uses_recorded_kit() -> void:
+	var node := audio()
+	if node:
+		check(node.bank.natural_dynamics, "DrumAudio prefers the recorded kit")
+
+
+func test_synth_fallback_covers_every_articulation() -> void:
+	var bank := DrumSynth.build_default_bank()
+	for spec in DrumSynth.articulations():
+		check_eq(bank.layer_count(spec[0]), spec[1], "%s layers" % spec[0])
+
+
+func test_recorded_gain_rises_with_intensity() -> void:
+	var bank := SampleKit.load_bank()
+	if bank == null:
+		return
+	for articulation in bank.articulations():
+		var last := -INF
+		var last_layer := -1
+		for i in 21:
+			var intensity := i / 20.0
+			var layer := bank.layer_for(articulation, intensity)
+			var db := bank.gain_db_for(articulation, intensity)
+			check(db <= 0.01, "%s never boosts" % articulation)
+			if layer == last_layer:
+				check(db >= last, "%s gain rises within a layer" % articulation)
+			last = db
+			last_layer = layer
+
+
+func test_bus_routing() -> void:
+	check_eq(load("res://scripts/audio/drum_audio.gd").bus_for(&"tom2/head"), &"Toms")
+	check_eq(load("res://scripts/audio/drum_audio.gd").bus_for(&"ride/bell"), &"Cymbals")
+	check_eq(load("res://scripts/audio/drum_audio.gd").bus_for(&"hihat/pedal"), &"HiHat")
+	for bus in [&"Drums", &"Kick", &"Snare", &"Toms", &"HiHat", &"Cymbals"]:
+		check(AudioServer.get_bus_index(bus) != -1, "bus %s exists" % bus)
 
 
 func test_voice_pool_never_runs_out() -> void:

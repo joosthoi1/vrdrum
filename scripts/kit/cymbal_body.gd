@@ -1,8 +1,10 @@
 @tool
 extends Node3D
-## Procedural cymbal visuals with a spring wobble when hit.
-## Place under a [DrumPiece] ([Cymbal] or [HiHat]). Geometry is regenerated
-## from the exported values (also in the editor) and never saved.
+## Procedural cymbal visuals with a spring wobble and a per-zone hit flash.
+## Place under a [DrumPiece] ([Cymbal] or [HiHat]). The plate is built as one
+## ring per playing zone of the parent (e.g. bell / bow / edge), so the ring
+## that was hit lights up. Geometry is regenerated from the exported values
+## (also in the editor) and never saved.
 
 @export var radius := 0.23:
 	set(value):
@@ -23,6 +25,8 @@ extends Node3D
 		_rebuild()
 ## Lift with the parent [HiHat]'s openness (top hi-hat cymbal).
 @export var follow_hihat := false
+## Light up the hit zone. Off for the hi-hat's bottom cymbal.
+@export var highlight := true
 ## Wobble spring stiffness and damping.
 @export var stiffness := 90.0
 @export var damping := 3.5
@@ -30,7 +34,11 @@ extends Node3D
 @export var hit_impulse := 1.6
 @export var max_tilt := 0.35
 
+const PLATE_HEIGHT := 0.012
+
 var _pivot: Node3D
+## One highlight per zone of the parent piece.
+var _zone_highlights: Array[HitHighlight] = []
 ## Small-angle tilt (axis * angle) and its angular velocity, in local space.
 var _tilt := Vector3.ZERO
 var _spin := Vector3.ZERO
@@ -70,12 +78,20 @@ func tilt_angle() -> float:
 	return _tilt.length()
 
 
+## Highlight strength of each zone's ring right now (for tests).
+func zone_flash(zone: int) -> float:
+	if zone < 0 or zone >= _zone_highlights.size() or _zone_highlights[zone] == null:
+		return 0.0
+	return _zone_highlights[zone].alpha()
+
+
 func _rebuild() -> void:
 	if not is_inside_tree():
 		return
 	for child in get_children():
 		if child.has_meta(&"generated"):
 			child.free()
+	_zone_highlights.clear()
 	_pivot = Node3D.new()
 	_pivot.set_meta(&"generated", true)
 	add_child(_pivot)
@@ -85,27 +101,33 @@ func _rebuild() -> void:
 	bronze.metallic = 0.85
 	bronze.roughness = 0.3
 	bronze.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var direction := -1.0 if flipped else 1.0
 
-	var plate := CylinderMesh.new()
-	plate.top_radius = bell_radius
-	plate.bottom_radius = radius
-	plate.height = 0.012
-	plate.radial_segments = 48
-	plate.rings = 1
-	plate.cap_top = false
-	plate.cap_bottom = false
-	# Centred on the playing surface so edge hits line up with the visual.
-	var plate_instance := _add(plate, bronze, Vector3.ZERO)
-	if flipped:
-		plate_instance.rotation.x = PI
+	# Zone radii from the parent piece; a plain cymbal is one zone. Read the
+	# property generically: in the editor the (non-tool) parent script is only
+	# a placeholder, and casting it would fail.
+	var zone_radii := PackedFloat32Array([radius])
+	var parent_radii = get_parent().get(&"zone_outer_radii") if get_parent() else null
+	if parent_radii is PackedFloat32Array and not parent_radii.is_empty():
+		zone_radii = parent_radii.duplicate()
+		zone_radii[zone_radii.size() - 1] = maxf(zone_radii[zone_radii.size() - 1], radius)
 
 	var bell := SphereMesh.new()
 	bell.radius = bell_radius
 	bell.height = bell_radius * 0.5
 	bell.radial_segments = 24
 	bell.rings = 8
-	_add(bell, bronze, Vector3(0, 0.004 * direction, 0))
+	var bell_instance := _add(bell, bronze, Vector3(0, 0.004 * (-1.0 if flipped else 1.0), 0))
+
+	# The plate is a shallow cone from the bell out to the edge, split into
+	# one frustum per zone.
+	var inner := bell_radius
+	for zone in zone_radii.size():
+		var outer := minf(zone_radii[zone], radius)
+		var ring: MeshInstance3D = bell_instance
+		if outer > inner + 0.001:
+			ring = _add_ring(inner, outer, bronze)
+			inner = outer
+		_zone_highlights.append(HitHighlight.new(ring) if highlight else null)
 
 	if stand:
 		var pole := CylinderMesh.new()
@@ -124,6 +146,26 @@ func _rebuild() -> void:
 		add_child(instance)
 
 
+## A frustum of the plate's cone between two radii. The whole plate is
+## centred on the playing surface so hits line up with the visual.
+func _add_ring(inner: float, outer: float, material: Material) -> MeshInstance3D:
+	var span := maxf(radius - bell_radius, 0.001)
+	var height_at := func(r: float) -> float: return PLATE_HEIGHT * (0.5 - (r - bell_radius) / span)
+	var ring := CylinderMesh.new()
+	ring.top_radius = inner
+	ring.bottom_radius = outer
+	ring.height = maxf(height_at.call(inner) - height_at.call(outer), 0.0005)
+	ring.radial_segments = 48
+	ring.rings = 1
+	ring.cap_top = false
+	ring.cap_bottom = false
+	var y: float = (height_at.call(inner) + height_at.call(outer)) / 2.0
+	var instance := _add(ring, material, Vector3(0, -y if flipped else y, 0))
+	if flipped:
+		instance.rotation.x = PI
+	return instance
+
+
 func _add(mesh: Mesh, material: Material, pos: Vector3) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
@@ -134,6 +176,12 @@ func _add(mesh: Mesh, material: Material, pos: Vector3) -> MeshInstance3D:
 
 
 func _on_hit(h: DrumHit) -> void:
+	var piece := get_parent() as DrumPiece
+	var zone := 0
+	if piece and h.stick_id >= 0:
+		zone = maxi(piece.zone_at(h.position), 0)
+	if zone < _zone_highlights.size() and _zone_highlights[zone]:
+		_zone_highlights[zone].flash(self, h.intensity if h.stick_id >= 0 else h.intensity * 0.5)
 	if h.stick_id < 0:
 		return
 	# Push the struck side down: rotate about the in-plane axis perpendicular

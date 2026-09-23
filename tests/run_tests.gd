@@ -8,6 +8,33 @@ extends SceneTree
 const TEST_DIR := "res://tests"
 
 var _done := false
+var _errors := ErrorLog.new()
+
+
+## Collects engine and script errors, so a test that hits a runtime error
+## fails even though GDScript carries on after it.
+class ErrorLog extends Logger:
+	var messages: PackedStringArray = []
+	var _mutex := Mutex.new()
+
+	func _log_error(function: String, file: String, line: int, code: String, rationale: String,
+			_editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type == ERROR_TYPE_WARNING:
+			return
+		_mutex.lock()
+		messages.append("%s (%s:%d in %s)" % [rationale if rationale else code, file, line, function])
+		_mutex.unlock()
+
+	func take() -> PackedStringArray:
+		_mutex.lock()
+		var out := messages
+		messages = []
+		_mutex.unlock()
+		return out
+
+
+func _initialize() -> void:
+	OS.add_logger(_errors)
 
 
 func _process(_delta: float) -> bool:
@@ -38,8 +65,11 @@ func _run_all() -> int:
 			var case: TestCase = script.new()
 			case.tree = self
 			case.current_test = "%s::%s" % [file.get_basename(), name]
+			_errors.take()
 			case.call(name)
 			case.cleanup()
+			for error in _errors.take():
+				case.failures.append("%s: runtime error: %s" % [case.current_test, error])
 			if case.failures.is_empty():
 				passed += 1
 			else:
