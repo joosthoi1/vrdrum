@@ -42,6 +42,10 @@ Left-handed mode (Menu → Play) mirrors the kit and swaps the kick and hi-hat t
 
 Your settings and layout are saved automatically.
 
+## Clone Hero
+
+VR Drums can play Clone Hero like an electronic drum kit, with Clone Hero's screen shown inside VR. See `CLONE_HERO.md`, next to this file, for the setup.
+
 ## Desktop mode
 
 Point at a drum or cymbal with the mouse. Left click (or J) plays the right stick and right click (or F) the left stick; hold Shift for a soft hit. Space is the kick, V (hold) closes the hi-hat and C taps the sticks together. Esc opens the menu.

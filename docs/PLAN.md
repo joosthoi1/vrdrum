@@ -66,6 +66,7 @@ Your decisions:
     - `.github/workflows/release.yml` runs on `v*` tags: tests, exports, a check that the build starts, zips with the player guide, a GitHub Release, and an optional itch.io upload.
     - Docs: `docs/PLAYING.md`, `docs/RELEASING.md`, `docs/TESTING.md` and `CHANGELOG.md`.
   - Still to do: go through `docs/TESTING.md` on PSVR2 and other headsets, set up the itch.io page, and tag the first release.
+- **M5 (Clone Hero):** implemented; needs testing on your PC with Clone Hero. See section 4.
 - **Stick clicks:** tap the sticks together for a click (`StickClicker`).
   - Detection: each stick is a segment from butt to tip. It checks closest-point contact within 1.8 cm, plus a swept pass-through test, so fast taps aren't missed.
   - Loudness comes from the two sticks' relative speed.
@@ -161,7 +162,7 @@ Everything is rebindable, and left-handed kit layouts are supported.
   - pads can optionally flash, which helps with tracking and timing
 
 ## 3. Project layout (Godot 4.7)
-This layout is the target. The M0–M4 parts exist so far.
+This layout is the target. The M0–M5 parts exist so far; the Clone Hero parts live in `scripts/clonehero/`, `addons/vrdrum_native/` and `native/`.
 ```
 project.godot
 openxr_action_map.tres        # stick pose, triggers (kick/hh), menu, grip; multi-profile bindings
@@ -225,13 +226,18 @@ docs/PLAN.md
 - Test on PSVR2, then any other headsets you can borrow (Quest via Link, Index).
 - Release on itch.io. An optional Linux export and native Quest APK can follow.
 
-**M5 — Rhythm mode (later)**
-- Load songs (an audio file plus a chart). Support Clone Hero/Rock Band style `.chart` and `.mid` drum charts.
-- A note highway, or notes that light up the matching pads.
-- Timing windows, scoring, and combo.
-- A calibration screen for audio and visual offset.
-- Song selection.
-- The hit events from M1–M2 already carry timestamps and piece/zone IDs, so scoring can use them directly.
+**M5 — Clone Hero** (replaces the original rhythm-mode idea; see `docs/CLONE_HERO.md`)
+- **MIDI out:** the kit acts as an e-kit for Clone Hero.
+  - Each hit goes out as a MIDI note through a loopMIDI virtual cable (`MidiBridge`, `DrumMidiMap`).
+  - There's a Clone Hero note map (one note per pad) and a General MIDI one, plus Test lanes buttons and Clone Hero lane colours.
+  - Our own kit sounds can be turned off.
+- **In-VR screen:** Clone Hero's window is mirrored onto a screen in the room (`GameScreen`).
+  - It uses DXGI Desktop Duplication, cropped to the window.
+  - You can move it in the kit editor, and it's saved with the layout (never mirrored).
+  - The Desktop+ overlay is the documented fallback.
+- **Native code:** `addons/vrdrum_native` (C++ GDExtension, godot-cpp 10 plus RtMidi) provides `MidiOut` and `WindowCapture`.
+  - Prebuilt Windows and Linux libraries are committed; CI rebuilds them from `native/`.
+  - The game works without it; the Clone Hero features then explain what's missing.
 
 ## 5. Key risks and how to handle them
 | Risk | Mitigation |

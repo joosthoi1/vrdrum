@@ -3,3 +3,10 @@
 /android/
 /builds/
 *.tmp
+
+# Native extension build intermediates (the built libraries in
+# addons/vrdrum_native/bin are committed)
+native/**/*.o
+native/**/*.os
+native/**/*.obj
+native/.sconsign.dblite

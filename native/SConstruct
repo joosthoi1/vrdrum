@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+"""Builds the vrdrum_native GDExtension into addons/vrdrum_native/bin.
+
+  scons platform=linux target=template_debug
+  scons platform=windows use_mingw=yes target=template_release
+
+See native/README.md.
+"""
+
+env = Environment(tools=["default"], PLATFORM="")
+# RtMidi reports errors with C++ exceptions; godot-cpp disables them by default.
+env["disable_exceptions"] = False
+api_version = "4.7"
+env = SConscript("godot-cpp/SConstruct", exports=["env", "api_version"])
+
+env.Append(CPPPATH=["src/", "thirdparty/rtmidi/"])
+sources = Glob("src/*.cpp") + ["thirdparty/rtmidi/RtMidi.cpp"]
+
+platform = env["platform"]
+if platform == "windows":
+    env.Append(CPPDEFINES=["__WINDOWS_MM__", "WIN32_LEAN_AND_MEAN", "NOMINMAX"])
+    env.Append(LIBS=["winmm", "d3d11", "dxgi", "user32", "dwmapi"])
+    if env.get("use_mingw"):
+        # Ship a single DLL: no libstdc++/libgcc/winpthread DLLs next to it.
+        env.Append(LINKFLAGS=["-static", "-static-libgcc", "-static-libstdc++"])
+elif platform == "linux":
+    env.Append(CPPDEFINES=["__LINUX_ALSA__"])
+    env.Append(LIBS=["asound", "pthread"])
+elif platform == "macos":
+    env.Append(CPPDEFINES=["__MACOSX_CORE__"])
+    env.Append(LINKFLAGS=["-framework", "CoreMIDI", "-framework", "CoreAudio", "-framework", "CoreFoundation"])
+
+suffix = env["suffix"].replace(".dev", "").replace(".universal", "")
+library = env.SharedLibrary(
+    "../addons/vrdrum_native/bin/libvrdrum_native{}{}".format(suffix, env["SHLIBSUFFIX"]),
+    source=sources,
+)
+Default(library)

@@ -135,6 +135,20 @@ func is_armed(stick_id: int) -> bool:
 	return _armed.get(stick_id, true)
 
 
+## Kit editor support: where to grab the piece and how far out it reaches
+## (the outermost zone, or a default for pieces sticks can't hit).
+func grab_center() -> Vector3:
+	return surface_center()
+
+
+func grab_normal() -> Vector3:
+	return surface_normal()
+
+
+func grab_radius() -> float:
+	return zone_outer_radii[zone_outer_radii.size() - 1] if not zone_outer_radii.is_empty() else 0.28
+
+
 ## Re-arms every stick, e.g. after the piece was moved.
 func reset_arming() -> void:
 	_armed.clear()

@@ -5,8 +5,10 @@ extends RefCounted
 ## form; left-handed play mirrors a layout when it is applied.
 ##
 ## Format: {"version": 1, "placement": [12 floats],
-##          "pieces": {"snare": [12 floats], ...}}
+##          "pieces": {"snare": [12 floats], ...},
+##          "extras": {"screen": [12 floats]}}
 ## where 12 floats are a Transform3D: basis x, y, z columns, then origin.
+## Extras (the Clone Hero screen) are placed like pieces but never mirrored.
 
 const VERSION := 1
 const SLOTS := 3
@@ -19,16 +21,18 @@ const MIRROR := Basis(Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1))
 
 
 ## Snapshot of [param kit]: every piece's local transform plus the kit's own.
-static func capture(kit: Node3D, pieces: Array) -> Dictionary:
-	var out := {"version": VERSION, "placement": to_array(kit.transform), "pieces": {}}
+static func capture(kit: Node3D, pieces: Array, extras: Dictionary = {}) -> Dictionary:
+	var out := {"version": VERSION, "placement": to_array(kit.transform), "pieces": {}, "extras": {}}
 	for piece in pieces:
 		out.pieces[String(piece.piece_id)] = to_array(piece.transform)
+	for key in extras:
+		out.extras[key] = to_array(extras[key].transform)
 	return out
 
 
 ## Moves pieces (and, with [param with_placement], the kit) to [param layout].
 ## Pieces missing from the layout stay where they are.
-static func apply(kit: Node3D, pieces: Array, layout: Dictionary, with_placement: bool = true) -> void:
+static func apply(kit: Node3D, pieces: Array, layout: Dictionary, with_placement: bool = true, extras: Dictionary = {}) -> void:
 	if with_placement and layout.has("placement"):
 		kit.transform = from_array(layout.placement)
 	var saved: Dictionary = layout.get("pieces", {})
@@ -36,6 +40,10 @@ static func apply(kit: Node3D, pieces: Array, layout: Dictionary, with_placement
 		var key := String(piece.piece_id)
 		if saved.has(key):
 			piece.transform = from_array(saved[key])
+	var saved_extras: Dictionary = layout.get("extras", {})
+	for key in extras:
+		if saved_extras.has(key):
+			extras[key].transform = from_array(saved_extras[key])
 
 
 ## The same layout for the other hand: every piece reflected left <-> right.

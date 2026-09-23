@@ -20,6 +20,8 @@ var persist := true
 ## The layout the scene was authored with (right-handed).
 var default_layout: Dictionary
 var left_handed := false
+## Play our own drum sounds. Off when only Clone Hero's audio should play.
+var play_sounds := true
 
 
 func _ready() -> void:
@@ -32,21 +34,39 @@ func _ready() -> void:
 	var settings := get_node_or_null(^"/root/Settings")
 	if settings:
 		left_handed = settings.get_value(&"left_handed")
+		play_sounds = settings.get_value(&"kit_sounds")
 		settings.changed.connect(_on_setting_changed)
+		_update_lane_colors(settings)
 	var saved := KitLayout.load_layout(CURRENT) if persist else {}
 	apply_layout(saved if not saved.is_empty() else default_layout, not saved.is_empty(), false)
 
 
 ## The current layout in right-handed form.
 func layout() -> Dictionary:
-	var current := KitLayout.capture(self, pieces())
+	var current := KitLayout.capture(self, pieces(), extras())
 	return KitLayout.mirrored(current) if left_handed else current
 
 
 ## Applies a right-handed [param data] (mirrored when playing left-handed).
 func apply_layout(data: Dictionary, with_placement: bool = true, save: bool = true) -> void:
-	KitLayout.apply(self, pieces(), KitLayout.mirrored(data) if left_handed else data, with_placement)
+	KitLayout.apply(self, pieces(), KitLayout.mirrored(data) if left_handed else data, with_placement, extras())
 	_after_layout_change(save)
+
+
+## Things placed with the kit that aren't drums: the Clone Hero screen.
+func extras() -> Dictionary:
+	var screen := get_node_or_null(^"GameScreen")
+	return {"screen": screen} if screen else {}
+
+
+## What the kit editor can move: every piece, and the screen when shown.
+func grabbables() -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	out.append_array(pieces())
+	for node in extras().values():
+		if node.is_visible_in_tree():
+			out.append(node)
+	return out
 
 
 func set_left_handed(on: bool) -> void:
@@ -132,9 +152,27 @@ func _after_layout_change(save: bool) -> void:
 	layout_changed.emit()
 
 
+## Tints each piece in its Clone Hero lane colour (or clears the tint).
+func show_lane_colors(on: bool) -> void:
+	for p in pieces():
+		var color = DrumMidiMap.LANE_COLORS.get(p.piece_id) if on else null
+		for body in p.get_children():
+			if body.has_method("set_lane_color"):
+				body.set_lane_color(color)
+
+
+func _update_lane_colors(settings: Node) -> void:
+	show_lane_colors(settings.get_value(&"lane_colors") and settings.get_value(&"midi_enabled"))
+
+
 func _on_setting_changed(key: StringName, value: Variant) -> void:
-	if key == &"left_handed":
-		set_left_handed(value)
+	match key:
+		&"left_handed":
+			set_left_handed(value)
+		&"kit_sounds":
+			play_sounds = value
+		&"lane_colors", &"midi_enabled":
+			_update_lane_colors(get_node(^"/root/Settings"))
 
 
 func _collect_pieces(node: Node, out: Array[DrumPiece]) -> void:
@@ -151,7 +189,7 @@ func play_external_hit(h: DrumHit) -> void:
 
 
 func _on_piece_hit(h: DrumHit) -> void:
-	if audio:
+	if audio and play_sounds:
 		audio.play_hit(h)
 	hit.emit(h)
 

@@ -26,6 +26,9 @@ extends Node3D
 
 var _head_highlight: HitHighlight
 var _rim_highlight: HitHighlight
+var _hoop: MeshInstance3D
+## Clone Hero lane colour for the hoop, or null for chrome.
+var _lane_color: Variant = null
 
 
 func _ready() -> void:
@@ -66,7 +69,9 @@ func _rebuild() -> void:
 	hoop.outer_radius = radius * 1.035
 	hoop.rings = 48
 	hoop.ring_segments = 8
-	_rim_highlight = HitHighlight.new(_add_mesh(hoop, _chrome(), Vector3(0, 0.002, 0)))
+	_hoop = _add_mesh(hoop, _chrome(), Vector3(0, 0.002, 0))
+	_rim_highlight = HitHighlight.new(_hoop)
+	_apply_lane_color()
 
 	if stand:
 		var pole := CylinderMesh.new()
@@ -96,6 +101,25 @@ static func _material(color: Color, metallic: float, roughness: float) -> Standa
 
 static func _chrome() -> StandardMaterial3D:
 	return _material(Color(0.8, 0.8, 0.82), 1.0, 0.2)
+
+
+## Colours the hoop in a Clone Hero lane colour; null restores chrome.
+func set_lane_color(color: Variant) -> void:
+	_lane_color = color
+	_apply_lane_color()
+
+
+func _apply_lane_color() -> void:
+	if _hoop == null:
+		return
+	if _lane_color is Color:
+		var tint := _material(_lane_color, 0.4, 0.3)
+		tint.emission_enabled = true
+		tint.emission = _lane_color
+		tint.emission_energy_multiplier = 0.35
+		_hoop.material_override = tint
+	else:
+		_hoop.material_override = _chrome()
 
 
 func _on_hit(h: DrumHit) -> void:

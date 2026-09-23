@@ -17,11 +17,24 @@ var kit: DrumKit
 var vr := false
 ## Size multiplier: 1 on the VR panel, smaller for desktop windows.
 var ui_scale := 1.0
+## Clone Hero tab: the MIDI bridge and the in-scene screen (set by main).
+var midi_bridge: MidiBridge:
+	set(value):
+		midi_bridge = value
+		if midi_bridge:
+			midi_bridge.status_changed.connect(_on_midi_status)
+			_on_midi_status(midi_bridge.status)
+var game_screen: GameScreen
 
 var _settings: Node
 ## setting key -> [control, value label or null]
 var _controls := {}
 var _status: Label
+var _midi_status: Label
+var _port_list: OptionButton
+var _window_list: OptionButton
+var _screen_status: Label
+var _screen_status_timer := 0.0
 
 
 func _ready() -> void:
@@ -47,9 +60,12 @@ func _ready() -> void:
 	if _settings:
 		for key in _settings.SPECS:
 			var spec: Array = _settings.SPECS[key]
-			_add_setting(pages[spec[5]], key, spec)
+			if pages.has(spec[5]):
+				_add_setting(pages[spec[5]], key, spec)
 		_settings.changed.connect(_on_setting_changed)
 	_build_kit_page(_add_page(tabs, "Kit"))
+	if _settings:
+		_build_clone_hero_page(_add_page(tabs, "Clone Hero"))
 
 	var bottom := HBoxContainer.new()
 	root.add_child(bottom)
@@ -158,6 +174,128 @@ func _build_kit_page(page: VBoxContainer) -> void:
 	_add_buttons(page, [["Reset all settings", _reset_settings]])
 
 
+func _build_clone_hero_page(page: VBoxContainer) -> void:
+	var intro := _wrapped_label("Play Clone Hero with this kit: every hit is sent as a MIDI note, like an electronic kit. Setup: docs/CLONE_HERO.md (loopMIDI, then pick the port here and in Clone Hero's MIDI settings).")
+	page.add_child(intro)
+	_midi_status = _wrapped_label("")
+	_midi_status.modulate = Color(0.55, 0.9, 1.0)
+	page.add_child(_midi_status)
+	_add_setting(page, &"midi_enabled", _settings.SPECS[&"midi_enabled"])
+	_port_list = _add_choice_row(page, "MIDI output port", _refresh_ports, func(text: String) -> void:
+		_settings.set_value(&"midi_port", text))
+	_controls[&"midi_port"] = [_port_list, null]
+	_add_setting(page, &"midi_map", _settings.SPECS[&"midi_map"])
+	page.add_child(_wrapped_label("Test lanes (send each lane's note, e.g. while Clone Hero's MIDI mapper listens):"))
+	var lanes := GridContainer.new()
+	lanes.columns = 4
+	lanes.add_theme_constant_override(&"h_separation", 10)
+	lanes.add_theme_constant_override(&"v_separation", 10)
+	page.add_child(lanes)
+	for lane in DrumMidiMap.LANES:
+		var button := Button.new()
+		button.text = lane[0]
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var style := StyleBoxFlat.new()
+		style.bg_color = (lane[2] as Color).darkened(0.35)
+		style.set_corner_radius_all(10)
+		style.set_content_margin_all(12 * ui_scale)
+		button.add_theme_stylebox_override(&"normal", style)
+		var note: int = lane[1]
+		button.pressed.connect(func() -> void:
+			if midi_bridge:
+				midi_bridge.test_lane(note))
+		lanes.add_child(button)
+	_add_setting(page, &"kit_sounds", _settings.SPECS[&"kit_sounds"])
+	_add_setting(page, &"lane_colors", _settings.SPECS[&"lane_colors"])
+	page.add_child(HSeparator.new())
+	_add_setting(page, &"ch_screen", _settings.SPECS[&"ch_screen"])
+	_window_list = _add_choice_row(page, "Window to show", _refresh_windows, func(text: String) -> void:
+		_settings.set_value(&"ch_window", text))
+	_controls[&"ch_window"] = [_window_list, null]
+	_add_setting(page, &"ch_screen_size", _settings.SPECS[&"ch_screen_size"])
+	_add_setting(page, &"ch_capture_width", _settings.SPECS[&"ch_capture_width"])
+	_screen_status = _wrapped_label("")
+	_screen_status.modulate = Color(0.55, 0.9, 1.0)
+	page.add_child(_screen_status)
+	_refresh_ports()
+	_refresh_windows()
+	if not MidiBridge.is_available():
+		_midi_status.text = "MIDI output needs the vrdrum_native extension, which isn't loaded on this platform."
+
+
+## A labelled drop-down with a Refresh button. [param on_pick] gets the
+## chosen item's text.
+func _add_choice_row(page: VBoxContainer, label_text: String, refresh: Callable, on_pick: Callable) -> OptionButton:
+	var row := HBoxContainer.new()
+	page.add_child(row)
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size.x = 380 * ui_scale
+	row.add_child(label)
+	var options := OptionButton.new()
+	options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	options.clip_text = true
+	options.item_selected.connect(func(index: int) -> void: on_pick.call(options.get_item_metadata(index)))
+	row.add_child(options)
+	var button := Button.new()
+	button.text = "Refresh"
+	button.pressed.connect(refresh)
+	row.add_child(button)
+	return options
+
+
+## Fills a drop-down with [param items], selecting [param current] (added
+## as "not found" if it isn't among them).
+static func _fill_choices(options: OptionButton, items: PackedStringArray, current: String, missing_note: String) -> void:
+	options.clear()
+	if current != "" and not items.has(current):
+		options.add_item("%s (%s)" % [current, missing_note])
+		options.set_item_metadata(0, current)
+	for item in items:
+		options.add_item(item)
+		options.set_item_metadata(options.item_count - 1, item)
+	for i in options.item_count:
+		if options.get_item_metadata(i) == current:
+			options.select(i)
+
+
+func _refresh_ports() -> void:
+	if _port_list and _settings:
+		_fill_choices(_port_list, MidiBridge.port_names(), _settings.get_value(&"midi_port"), "not found")
+		if midi_bridge and midi_bridge.enabled:
+			midi_bridge.open_port()
+
+
+func _refresh_windows() -> void:
+	if _window_list and _settings:
+		_fill_choices(_window_list, GameScreen.window_titles(), _settings.get_value(&"ch_window"), "not open")
+
+
+func _process(delta: float) -> void:
+	_screen_status_timer -= delta
+	if _screen_status == null or not is_visible_in_tree() or _screen_status_timer > 0.0:
+		return
+	_screen_status_timer = 0.5
+	if game_screen and game_screen.active:
+		_screen_status.text = "Screen: %s" % game_screen.status()
+	elif not GameScreen.is_available():
+		_screen_status.text = "Screen: window capture needs Windows. The Desktop+ overlay is an alternative (docs/CLONE_HERO.md)."
+	else:
+		_screen_status.text = "Screen: off"
+
+
+func _on_midi_status(text: String) -> void:
+	if _midi_status and MidiBridge.is_available():
+		_midi_status.text = text
+
+
+func _wrapped_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return label
+
+
 func _add_buttons(page: VBoxContainer, buttons: Array) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 12)
@@ -205,6 +343,10 @@ func _on_setting_changed(key: StringName, value: Variant) -> void:
 	var control: Control = _controls[key][0]
 	if control is CheckButton:
 		control.set_pressed_no_signal(value)
+	elif control == _port_list:
+		_fill_choices(_port_list, MidiBridge.port_names(), value, "not found")
+	elif control == _window_list:
+		_fill_choices(_window_list, GameScreen.window_titles(), value, "not open")
 	elif control is OptionButton:
 		control.selected = value
 	elif control is HSlider:

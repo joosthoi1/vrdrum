@@ -19,6 +19,7 @@ var menu_panel: UiPanel3D
 var menu_layer: CanvasLayer
 var editor: KitEditor
 var stick_clicker: StickClicker
+var midi_bridge: MidiBridge
 
 @onready var kit: DrumKit = $DrumKit
 @onready var debug_overlay: Label3D = $DebugOverlay
@@ -72,6 +73,12 @@ func _ready() -> void:
 		for stick in rig.sticks():
 			editor.add_hand(stick, null)
 	edit_hint.visible = false
+	midi_bridge = MidiBridge.new()
+	midi_bridge.name = "MidiBridge"
+	midi_bridge.kit = kit
+	add_child(midi_bridge)
+	menu.midi_bridge = midi_bridge
+	menu.game_screen = kit.get_node_or_null(^"GameScreen")
 	stick_clicker = StickClicker.new()
 	stick_clicker.name = "StickClicker"
 	stick_clicker.sticks = rig.sticks()

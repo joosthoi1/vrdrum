@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/kit/hihat.gd" id="5_hihat"]
 [ext_resource type="Script" path="res://scripts/kit/cymbal.gd" id="6_cymbal"]
 [ext_resource type="Script" path="res://scripts/kit/cymbal_body.gd" id="7_cymbal_body"]
+[ext_resource type="Script" path="res://scripts/clonehero/game_screen.gd" id="8_screen"]
 
 [node name="DrumKit" type="Node3D"]
 script = ExtResource("1_kit")
@@ -117,3 +118,7 @@ choke_group = &"ride"
 script = ExtResource("7_cymbal_body")
 radius = 0.255
 bell_radius = 0.07
+
+[node name="GameScreen" type="Node3D" parent="."]
+position = Vector3(0, 1.55, -1.45)
+script = ExtResource("8_screen")

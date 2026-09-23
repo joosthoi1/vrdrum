@@ -37,6 +37,11 @@ extends Node3D
 const PLATE_HEIGHT := 0.012
 
 var _pivot: Node3D
+var _bronze: StandardMaterial3D
+## Outermost ring of the plate, tinted with the lane colour.
+var _edge_ring: MeshInstance3D
+## Clone Hero lane colour for the edge ring, or null for plain bronze.
+var _lane_color: Variant = null
 ## One highlight per zone of the parent piece.
 var _zone_highlights: Array[HitHighlight] = []
 ## Small-angle tilt (axis * angle) and its angular velocity, in local space.
@@ -101,6 +106,8 @@ func _rebuild() -> void:
 	bronze.metallic = 0.85
 	bronze.roughness = 0.3
 	bronze.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_bronze = bronze
+	_edge_ring = null
 
 	# Zone radii from the parent piece; a plain cymbal is one zone. Read the
 	# property generically: in the editor the (non-tool) parent script is only
@@ -127,7 +134,9 @@ func _rebuild() -> void:
 		if outer > inner + 0.001:
 			ring = _add_ring(inner, outer, bronze)
 			inner = outer
+			_edge_ring = ring
 		_zone_highlights.append(HitHighlight.new(ring) if highlight else null)
+	_apply_lane_color()
 
 	if stand:
 		var pole := CylinderMesh.new()
@@ -173,6 +182,26 @@ func _add(mesh: Mesh, material: Material, pos: Vector3) -> MeshInstance3D:
 	instance.position = pos
 	_pivot.add_child(instance)
 	return instance
+
+
+## Colours the edge ring in a Clone Hero lane colour; null restores bronze.
+func set_lane_color(color: Variant) -> void:
+	_lane_color = color
+	_apply_lane_color()
+
+
+func _apply_lane_color() -> void:
+	if _edge_ring == null:
+		return
+	if _lane_color is Color:
+		var tint := _bronze.duplicate() as StandardMaterial3D
+		tint.albedo_color = _bronze.albedo_color.lerp(_lane_color, 0.75)
+		tint.emission_enabled = true
+		tint.emission = _lane_color
+		tint.emission_energy_multiplier = 0.3
+		_edge_ring.material_override = tint
+	else:
+		_edge_ring.material_override = _bronze
 
 
 func _on_hit(h: DrumHit) -> void:

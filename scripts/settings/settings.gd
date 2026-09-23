@@ -10,8 +10,8 @@ signal changed(key: StringName, value: Variant)
 
 const PATH := "user://settings.cfg"
 
-## key -> [default, min, max, step, label, tab]. Booleans have no range.
-## Choices: [default index, [option labels], null, null, label, tab].
+## key -> [default, min, max, step, label, tab]. Booleans and strings have
+## no range. Choices: [default index, [option labels], null, null, label, tab].
 const SPECS := {
 	# Play
 	&"sensitivity": [1.0, 0.5, 2.0, 0.05, "Hit sensitivity", "Play"],
@@ -35,6 +35,16 @@ const SPECS := {
 	&"render_scale": [1.0, 0.6, 1.5, 0.05, "Resolution (VR: after restart)", "Graphics"],
 	&"msaa": [2, ["Off", "2x", "4x", "8x"], null, null, "Anti-aliasing", "Graphics"],
 	&"shadows": [true, null, null, null, "Shadows", "Graphics"],
+	# Clone Hero
+	&"midi_enabled": [false, null, null, null, "Send hits as MIDI", "Clone Hero"],
+	&"midi_port": ["", null, null, null, "MIDI output port", "Clone Hero"],
+	&"midi_map": [0, ["Clone Hero", "General MIDI"], null, null, "Note map", "Clone Hero"],
+	&"kit_sounds": [true, null, null, null, "Kit sounds (like an e-kit's module)", "Clone Hero"],
+	&"lane_colors": [true, null, null, null, "Lane colours on the kit while sending MIDI", "Clone Hero"],
+	&"ch_screen": [false, null, null, null, "Show the Clone Hero screen", "Clone Hero"],
+	&"ch_window": ["Clone Hero", null, null, null, "Window to show", "Clone Hero"],
+	&"ch_screen_size": [1.3, 0.6, 3.0, 0.05, "Screen width (m)", "Clone Hero"],
+	&"ch_capture_width": [0, ["1280 px", "1920 px"], null, null, "Screen resolution", "Clone Hero"],
 }
 
 ## Viewport MSAA for each "msaa" choice.
@@ -66,7 +76,9 @@ func get_value(key: StringName) -> Variant:
 func set_value(key: StringName, value: Variant) -> void:
 	assert(SPECS.has(key), "Unknown setting %s" % key)
 	var spec: Array = SPECS[key]
-	if spec[1] is Array:
+	if spec[0] is String:
+		value = str(value)
+	elif spec[1] is Array:
 		value = clampi(int(value), 0, spec[1].size() - 1)
 	elif spec[1] != null:
 		value = clampf(float(value), spec[1], spec[2])
@@ -94,8 +106,8 @@ func load_settings() -> void:
 	for key in SPECS:
 		var spec: Array = SPECS[key]
 		var value = file.get_value("settings", String(key), spec[0])
-		if spec[0] is bool:
-			if value is bool:
+		if spec[0] is bool or spec[0] is String:
+			if typeof(value) == typeof(spec[0]):
 				_values[key] = value
 		elif spec[1] is Array:
 			if value is int:

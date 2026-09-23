@@ -1,6 +1,8 @@
 class_name KitEditor
 extends Node
-## Layout edit mode: move kit pieces around.
+## Layout edit mode: move kit pieces (and the Clone Hero screen) around.
+## Anything from [method DrumKit.grabbables] can be moved; it provides
+## grab_center(), grab_normal() and grab_radius().
 ##
 ## VR: touch a piece with a stick tip and hold that hand's trigger to grab
 ## it; it follows the stick (position and angle) until released.
@@ -9,7 +11,7 @@ extends Node
 ## Sticks don't play while editing, and each change is saved on release.
 
 signal active_changed(active: bool)
-signal piece_moved(piece: DrumPiece)
+signal piece_moved(piece: Node3D)
 
 ## How close (metres) a stick tip must be to a piece's surface to grab it.
 const GRAB_MARGIN := 0.08
@@ -31,9 +33,9 @@ var active := false:
 		_release_all()
 		active_changed.emit(value)
 
-## stick -> {"piece": DrumPiece, "offset": Transform3D}
+## stick -> {"piece": Node3D, "offset": Transform3D}
 var _held := {}
-var _drag: DrumPiece
+var _drag: Node3D
 var _drag_offset := Vector3.ZERO
 var _drag_height := 0.0
 
@@ -52,16 +54,16 @@ func add_hand(stick: DrumStick, controller: XRController3D) -> void:
 
 
 ## The piece a stick tip is touching, or null.
-func piece_near(point: Vector3) -> DrumPiece:
+func piece_near(point: Vector3) -> Node3D:
 	if kit == null:
 		return null
-	var best: DrumPiece = null
+	var best: Node3D = null
 	var best_distance := INF
-	for piece in kit.pieces():
-		var center := piece.surface_center()
-		var normal := piece.surface_normal()
+	for piece in kit.grabbables():
+		var center: Vector3 = piece.grab_center()
+		var normal: Vector3 = piece.grab_normal()
 		var height := absf((point - center).dot(normal))
-		var reach := _piece_radius(piece) + GRAB_MARGIN
+		var reach: float = piece.grab_radius() + GRAB_MARGIN
 		var radial := HitMath.radial_distance(point, center, normal)
 		if height > GRAB_HEIGHT or radial > reach:
 			continue
@@ -73,7 +75,7 @@ func piece_near(point: Vector3) -> DrumPiece:
 
 
 ## Starts holding whatever piece [param stick]'s tip touches.
-func grab(stick: DrumStick) -> DrumPiece:
+func grab(stick: DrumStick) -> Node3D:
 	if not active:
 		return null
 	var piece := piece_near(stick.tip_position())
@@ -94,10 +96,9 @@ func release(stick: DrumStick) -> void:
 func _process(_delta: float) -> void:
 	for stick in _held:
 		var held: Dictionary = _held[stick]
-		var piece: DrumPiece = held.piece
+		var piece: Node3D = held.piece
 		piece.global_transform = stick.global_transform * held.offset
-		piece.reset_arming()
-		piece_moved.emit(piece)
+		_moved(piece)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -127,19 +128,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		if point != null:
 			var target: Vector3 = point + _drag_offset
 			_drag.global_position = Vector3(target.x, _drag.global_position.y, target.z)
-			_drag.reset_arming()
-			piece_moved.emit(_drag)
+			_moved(_drag)
 
 
 ## The piece under a screen position, or null.
-func pick(screen: Vector2) -> DrumPiece:
+func pick(screen: Vector2) -> Node3D:
 	var origin := camera.project_ray_origin(screen)
 	var direction := camera.project_ray_normal(screen)
-	var best: DrumPiece = null
+	var best: Node3D = null
 	var best_distance := INF
-	for piece in kit.pieces():
-		var hit = Plane(piece.surface_normal(), piece.surface_center()).intersects_ray(origin, direction)
-		if hit == null or HitMath.radial_distance(hit, piece.surface_center(), piece.surface_normal()) > _piece_radius(piece) + 0.03:
+	for piece in kit.grabbables():
+		var center: Vector3 = piece.grab_center()
+		var normal: Vector3 = piece.grab_normal()
+		var hit = Plane(normal, center).intersects_ray(origin, direction)
+		if hit == null or HitMath.radial_distance(hit, center, normal) > piece.grab_radius() + 0.03:
 			continue
 		var distance := origin.distance_to(hit)
 		if distance < best_distance:
@@ -148,17 +150,21 @@ func pick(screen: Vector2) -> DrumPiece:
 	return best
 
 
-func raise(piece: DrumPiece, amount: float) -> void:
+func raise(piece: Node3D, amount: float) -> void:
 	piece.global_position.y += amount
-	piece.reset_arming()
-	piece_moved.emit(piece)
+	_moved(piece)
 
 
 ## Tilts a piece towards (+) or away from (-) the drummer.
-func tilt(piece: DrumPiece, angle: float) -> void:
+func tilt(piece: Node3D, angle: float) -> void:
 	var axis := kit.global_basis.x.normalized() if kit else Vector3.RIGHT
 	piece.global_basis = Basis(axis, angle) * piece.global_basis
-	piece.reset_arming()
+	_moved(piece)
+
+
+func _moved(piece: Node3D) -> void:
+	if piece.has_method("reset_arming"):
+		piece.reset_arming()
 	piece_moved.emit(piece)
 
 
@@ -186,7 +192,3 @@ func _controller_for(stick: DrumStick) -> XRController3D:
 			return pair[1]
 	return null
 
-
-## Grab reach: the outermost zone, or a default for pieces sticks can't hit.
-static func _piece_radius(piece: DrumPiece) -> float:
-	return piece.zone_outer_radii[piece.zone_outer_radii.size() - 1] if not piece.zone_outer_radii.is_empty() else 0.28

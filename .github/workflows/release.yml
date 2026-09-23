@@ -26,6 +26,13 @@ jobs:
       BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      # Release builds use native libraries built from source.
+      - uses: ./.github/actions/build-native
+        with:
+          targets: template_release
 
       - name: Cache Godot and export templates
         id: cache-godot
@@ -72,6 +79,8 @@ jobs:
           ~/godot/godot --headless --xr-mode off --audio-driver Dummy --export-release "Windows Desktop" builds/windows/VRDrums.exe
           ~/godot/godot --headless --xr-mode off --audio-driver Dummy --export-release "Linux" builds/linux/VRDrums.x86_64
           test -s builds/windows/VRDrums.exe && test -s builds/linux/VRDrums.x86_64
+          test -s builds/windows/libvrdrum_native.windows.template_release.x86_64.dll
+          test -s builds/linux/libvrdrum_native.linux.template_release.x86_64.so
 
       - name: Check the Linux build starts and loads the recorded kit
         run: |
@@ -83,6 +92,7 @@ jobs:
           V=${{ steps.version.outputs.version }}
           for platform in windows linux; do
             cp docs/PLAYING.md builds/$platform/README.md
+            cp docs/CLONE_HERO.md builds/$platform/CLONE_HERO.md
             cp assets/kits/rusty/README.md builds/$platform/SAMPLES.md
             (cd builds/$platform && zip -q -r ../../VRDrums-$V-$platform.zip .)
           done

@@ -1,7 +1,8 @@
 extends SceneTree
 ## CPU benchmark: runs the main scene in desktop mode with a busy drum
-## pattern (about 24 hits per second across every piece, plus pedals) and
-## reports per-frame script/process time. Fails (exit code 1) if the average
+## pattern (about 24 hits per second across every piece, plus pedals), the
+## Clone Hero screen receiving 1280x720 frames at 60 fps, and reports
+## per-frame script/process time. Fails (exit code 1) if the average
 ## frame's process time goes over the budget, as a performance smoke test.
 ##
 ## Usage: godot --headless --xr-mode off --audio-driver Dummy --script res://tools/benchmark.gd
@@ -21,6 +22,33 @@ var _hits := 0
 var _objects_start := 0
 var _exit_code := -1
 var _exit_frame := 0
+var _capture := FakeCapture.new()
+
+
+## Stands in for the native window capture: a new 1280x720 frame on every
+## other call (60 fps at 120 Hz).
+class FakeCapture:
+	var frame := PackedByteArray()
+	var calls := 0
+
+	func _init() -> void:
+		frame.resize(1280 * 720 * 4)
+
+	func start(_title: String, _max_width: int) -> bool:
+		return true
+
+	func stop() -> void:
+		pass
+
+	func fetch_frame() -> PackedByteArray:
+		calls += 1
+		return frame if calls % 2 == 0 else PackedByteArray()
+
+	func get_frame_size() -> Vector2i:
+		return Vector2i(1280, 720)
+
+	func get_status() -> String:
+		return "Capturing (benchmark)"
 
 
 func _initialize() -> void:
@@ -42,6 +70,9 @@ func _process(_delta: float) -> bool:
 		_main.rig.follow_mouse = false
 		_main.kit.hit.connect(func(_h: DrumHit) -> void: _hits += 1)
 		root.get_node("DrumAudio").wait_until_ready()
+		var screen: GameScreen = _main.kit.get_node("GameScreen")
+		screen.source = _capture
+		screen.set_active(true)
 		_objects_start = Performance.get_monitor(Performance.OBJECT_COUNT)
 	if _frame < 2:
 		return false
@@ -52,6 +83,7 @@ func _process(_delta: float) -> bool:
 		stick.step(DT)
 	_main.stick_clicker.step(DT)
 	_main.pedals.step(DT)
+	_main.kit.get_node("GameScreen")._process(DT)
 	for piece in _main.kit.pieces():
 		for child in piece.get_children():
 			if child.has_method("tilt_angle"):

@@ -22,6 +22,17 @@ Run through this on each headset before a release. Turn on the debug overlay (th
 - [ ] Hits feel on time. Film the controller hitting a table while recording the game's audio, and check the delay; aim for under 30 ms.
 - [ ] Sounds come from where the drums are: turn your head and the ride moves in the stereo image.
 
+## Clone Hero
+
+- [ ] Clone Hero lists the loopMIDI port as a MIDI input, and the VR Drums menu shows *Sending to "…"*.
+- [ ] Every lane maps with one hit (or its Test lanes button), and notes register in songs.
+- [ ] Soft and hard hits reach Clone Hero with different velocities.
+- [ ] The in-VR screen shows Clone Hero, about a frame behind the TV, with the right colours.
+- [ ] A still menu stays on the screen. Minimizing Clone Hero shows a message instead.
+- [ ] Moving and resizing the screen in the kit editor survives a restart.
+- [ ] The frame rate stays at the headset's refresh rate with the screen on.
+- [ ] Turning off kit sounds silences our kit, but MIDI still reaches Clone Hero.
+
 ## Comfort and settings
 
 - [ ] B / Y sets the kit height where the sticks are.

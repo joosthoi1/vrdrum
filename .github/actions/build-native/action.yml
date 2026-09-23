@@ -1,0 +1,41 @@
+name: Build native extension
+description: Builds addons/vrdrum_native for Linux and Windows (MinGW) from native/.
+inputs:
+  targets:
+    description: Space-separated SCons targets
+    default: template_debug template_release
+runs:
+  using: composite
+  steps:
+    - name: Install toolchains
+      shell: bash
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y -q g++-mingw-w64-x86-64-posix libasound2-dev
+        pip install scons
+
+    - name: godot-cpp revision
+      id: godot-cpp
+      shell: bash
+      run: echo "sha=$(git -C native/godot-cpp rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache godot-cpp build
+      uses: actions/cache@v4
+      with:
+        path: |
+          native/godot-cpp/bin
+          native/godot-cpp/gen
+          native/godot-cpp/src/**/*.o
+          native/godot-cpp/gen/**/*.o
+          native/.sconsign.dblite
+        key: godot-cpp-${{ steps.godot-cpp.outputs.sha }}-${{ inputs.targets }}-${{ hashFiles('native/SConstruct') }}
+
+    - name: Build
+      shell: bash
+      run: |
+        cd native
+        for target in ${{ inputs.targets }}; do
+          scons -j4 platform=linux target=$target
+          scons -j4 platform=windows use_mingw=yes target=$target
+        done
+        ls -la ../addons/vrdrum_native/bin

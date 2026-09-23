@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+- Play Clone Hero with the VR kit:
+  - Hits are sent as MIDI notes (through loopMIDI). There's a Clone Hero note map with one note per pad, and a General MIDI one.
+  - Test lanes buttons, and Clone Hero lane colours on the pads.
+  - A toggle for our own kit sounds.
+- Clone Hero's window is shown on a screen in the practice room (Windows, via desktop capture). You can move and resize it in the kit editor, and it's saved with the layout.
+- New native GDExtension (`addons/vrdrum_native`) with prebuilt Windows and Linux libraries.
+- See docs/CLONE_HERO.md.
+
 ## 0.4.0
 
 - Tap the sticks together for a stick click, e.g. to count in. It's detected even for fast taps, gets louder the harder you tap, and vibrates and lights up both sticks. You can turn it off under Menu → Play.

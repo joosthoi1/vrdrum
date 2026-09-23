@@ -33,7 +33,7 @@ kick_path = NodePath("../DrumKit/Kick")
 hihat_path = NodePath("../DrumKit/HiHat")
 
 [node name="DebugOverlay" type="Label3D" parent="."]
-position = Vector3(0, 1.45, -1.0)
+position = Vector3(-0.85, 1.35, -1.0)
 pixel_size = 0.001
 billboard = 1
 font_size = 40
