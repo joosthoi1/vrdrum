@@ -3,18 +3,26 @@ extends Node
 ##
 ## Uses the recorded kit (res://assets/kits/rusty) when present and falls back
 ## to the synthesised kit, built on a worker thread (instant once cached).
-## Voices are positional, so in VR each drum is heard from where it stands.
 ## Everything is preloaded and allocated up front: triggering a hit never
 ## loads or allocates anything.
 ##
+## Hits are panned towards where each drum is relative to the listener's
+## head. Voices are plain AudioStreamPlayers, which start mixing the moment
+## play() is called; AudioStreamPlayer3D would wait for the next physics tick
+## (a frame of extra latency). Panning instead comes from routing each voice
+## to one of a few pre-panned buses.
+##
 ## Bus layout: Kick / Snare / Toms / HiHat / Cymbals -> Drums (glue
-## compressor, light room) -> Master.
+## compressor, light room) -> Master, and under each group bus the pan buses
+## <Group>_p0 (left) .. <Group>_p4 (right).
 
 signal bank_ready
 
 const VOICE_COUNT := 64
 const BUS_NAME := &"Drums"
 const GROUP_BUSES: Array[StringName] = [&"Kick", &"Snare", &"Toms", &"HiHat", &"Cymbals"]
+## Pan positions of the pan buses, left to right (scaled by spatial_strength).
+const PAN_STEPS: Array[float] = [-1.0, -0.5, 0.0, 0.5, 1.0]
 
 ## Playback gain for the softest possible hit (synthesised kit only; recorded
 ## layers carry their own dynamics).
@@ -28,14 +36,13 @@ const GROUP_BUSES: Array[StringName] = [&"Kick", &"Snare", &"Toms", &"HiHat", &"
 @export var spatial_strength := 0.5:
 	set(value):
 		spatial_strength = value
-		for voice in _voices:
-			voice.panning_strength = value
+		_update_pan_buses()
 ## Load the recorded kit. Off falls back to the synthesised kit.
 @export var use_recorded_kit := true
 
 var bank: DrumSampleBank
 
-var _voices: Array[AudioStreamPlayer3D] = []
+var _voices: Array[AudioStreamPlayer] = []
 var _voice_groups: Array[StringName] = []
 var _voice_fades: Array[Tween] = []
 var _next_voice := 0
@@ -46,18 +53,18 @@ var _built_bank: DrumSampleBank
 func _ready() -> void:
 	_ensure_buses()
 	for i in VOICE_COUNT:
-		var voice := AudioStreamPlayer3D.new()
+		var voice := AudioStreamPlayer.new()
 		voice.bus = BUS_NAME
-		voice.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
-		voice.panning_strength = spatial_strength
-		voice.doppler_tracking = AudioStreamPlayer3D.DOPPLER_TRACKING_DISABLED
 		add_child(voice)
 		_voices.append(voice)
 		_voice_groups.append(&"")
 		_voice_fades.append(null)
 	if bank == null and use_recorded_kit:
 		bank = SampleKit.load_bank()
+		if bank:
+			print("Drum sounds: recorded kit (%d articulations)" % bank.articulations().size())
 	if bank == null:
+		print("Drum sounds: recorded kit not found, using the synthesised kit")
 		_build_task = WorkerThreadPool.add_task(_build_bank, false, "Build drum sounds")
 
 
@@ -70,6 +77,11 @@ func _exit_tree() -> void:
 	# Never quit with the build still running on a worker thread.
 	if _build_task != -1:
 		_finish_build()
+	# Release playbacks still ringing, so the audio server can free them.
+	for i in _voices.size():
+		_stop_fade(i)
+		_voices[i].stop()
+		_voices[i].stream = null
 
 
 func is_ready() -> bool:
@@ -82,16 +94,16 @@ func wait_until_ready() -> void:
 		_finish_build()
 
 
-func play_hit(hit: DrumHit) -> AudioStreamPlayer3D:
+func play_hit(hit: DrumHit) -> AudioStreamPlayer:
 	if hit.chokes:
 		choke(hit.chokes)
 	return play(hit.articulation(), hit.intensity, hit.choke_group, hit.position)
 
 
-## Plays [param articulation] (e.g. &"snare/head") at [param intensity] 0..1
-## from [param position]. Returns the voice used, or null if there is no
-## sample for it (yet).
-func play(articulation: StringName, intensity: float, choke_group: StringName = &"", position: Vector3 = Vector3.ZERO) -> AudioStreamPlayer3D:
+## Plays [param articulation] (e.g. &"snare/head") at [param intensity] 0..1,
+## panned towards [param position] (world space; null = centred). Returns the
+## voice used, or null if there is no sample for it (yet).
+func play(articulation: StringName, intensity: float, choke_group: StringName = &"", position: Variant = null) -> AudioStreamPlayer:
 	if bank == null:
 		return null
 	var stream := bank.pick(articulation, intensity)
@@ -102,8 +114,7 @@ func play(articulation: StringName, intensity: float, choke_group: StringName = 
 	var voice := _voices[index]
 	_voice_groups[index] = choke_group
 	voice.stream = stream
-	voice.bus = bus_for(articulation)
-	voice.global_position = position
+	voice.bus = pan_bus(bus_for(articulation), pan_step_for(position))
 	voice.volume_db = bank.gain_db_for(articulation, intensity, min_gain_db)
 	voice.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	voice.play()
@@ -143,6 +154,27 @@ static func bus_for(articulation: StringName) -> StringName:
 	if piece.begins_with("tom"):
 		return &"Toms"
 	return BUS_NAME
+
+
+## Which pan bus (index into [constant PAN_STEPS]) a sound at [param position]
+## goes to, from where it is relative to the current camera (the headset in VR).
+func pan_step_for(position: Variant) -> int:
+	var center := PAN_STEPS.size() / 2
+	var viewport := get_viewport()
+	var camera := viewport.get_camera_3d() if viewport else null
+	if position == null or camera == null:
+		return center
+	var local: Vector3 = camera.global_transform.affine_inverse() * (position as Vector3)
+	var flat := Vector2(local.x, -local.z)
+	if flat.length() < 0.05:
+		return center
+	# Sine of the azimuth: -1 hard left, 0 straight ahead or behind, 1 hard right.
+	var pan := flat.x / flat.length()
+	return clampi(roundi((pan + 1.0) / 2.0 * (PAN_STEPS.size() - 1)), 0, PAN_STEPS.size() - 1)
+
+
+static func pan_bus(group_bus: StringName, step: int) -> StringName:
+	return StringName("%s_p%d" % [group_bus, step]) if group_bus in GROUP_BUSES else group_bus
 
 
 ## Sets a mixer bus volume (linear 0..1.5). Used by the settings menu.
@@ -200,6 +232,18 @@ func _ensure_buses() -> void:
 	AudioServer.add_bus_effect(drums, room)
 	for bus in GROUP_BUSES:
 		_add_bus(bus, BUS_NAME)
+		for step in PAN_STEPS.size():
+			var index := _add_bus(pan_bus(bus, step), bus)
+			AudioServer.add_bus_effect(index, AudioEffectPanner.new())
+	_update_pan_buses()
+
+
+func _update_pan_buses() -> void:
+	for bus in GROUP_BUSES:
+		for step in PAN_STEPS.size():
+			var index := AudioServer.get_bus_index(pan_bus(bus, step))
+			if index != -1:
+				(AudioServer.get_bus_effect(index, 0) as AudioEffectPanner).pan = PAN_STEPS[step] * spatial_strength
 
 
 static func _add_bus(bus_name: StringName, send: StringName) -> int:

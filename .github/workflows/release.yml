@@ -1,0 +1,112 @@
+name: Release
+
+# Push a tag like v0.4.0 (matching application/config/version in
+# project.godot) to build Windows and Linux downloads and publish them as a
+# GitHub Release. Can also be run by hand to just build the downloads.
+#
+# Optional itch.io upload: set the repository secret BUTLER_API_KEY and the
+# repository variable ITCH_GAME (e.g. "yourname/vr-drums").
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # Job level, so the itch.io step's condition can see whether it is set.
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot and export templates
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-export-${{ env.GODOT_VERSION }}
+
+      - name: Download Godot and export templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d ~/godot
+          mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+          TEMPLATES=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$TEMPLATES"
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q -j templates.tpz templates/version.txt templates/linux_release.x86_64 \
+            templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe -d "$TEMPLATES"
+          rm templates.tpz
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(sed -n 's/^config\/version="\(.*\)"/\1/p' project.godot)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/* && "${GITHUB_REF_NAME#v}" != "$VERSION" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match project version $VERSION"
+            exit 1
+          fi
+
+      - name: Import project
+        run: ~/godot/godot --headless --xr-mode off --audio-driver Dummy --import
+
+      - name: Run tests
+        run: ~/godot/godot --headless --xr-mode off --audio-driver Dummy --script res://tests/run_tests.gd
+
+      - name: Export
+        run: |
+          mkdir -p builds/windows builds/linux
+          ~/godot/godot --headless --xr-mode off --audio-driver Dummy --export-release "Windows Desktop" builds/windows/VRDrums.exe
+          ~/godot/godot --headless --xr-mode off --audio-driver Dummy --export-release "Linux" builds/linux/VRDrums.x86_64
+          test -s builds/windows/VRDrums.exe && test -s builds/linux/VRDrums.x86_64
+
+      - name: Check the Linux build starts and loads the recorded kit
+        run: |
+          ./builds/linux/VRDrums.x86_64 --headless --xr-mode off --audio-driver Dummy --quit-after 200 2>&1 | tee run.log
+          grep -q "Drum sounds: recorded kit" run.log
+
+      - name: Package
+        run: |
+          V=${{ steps.version.outputs.version }}
+          for platform in windows linux; do
+            cp docs/PLAYING.md builds/$platform/README.md
+            cp assets/kits/rusty/README.md builds/$platform/SAMPLES.md
+            (cd builds/$platform && zip -q -r ../../VRDrums-$V-$platform.zip .)
+          done
+          awk -v v="$V" '$0 ~ "^## " v {found=1; next} /^## / && found {exit} found' CHANGELOG.md > release-notes.md
+          cat release-notes.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VRDrums-${{ steps.version.outputs.version }}
+          path: VRDrums-*.zip
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: VR Drums ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          files: VRDrums-*.zip
+
+      - name: Upload to itch.io
+        if: startsWith(github.ref, 'refs/tags/') && env.BUTLER_API_KEY != '' && vars.ITCH_GAME != ''
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          V=${{ steps.version.outputs.version }}
+          ./butler/butler push builds/windows "${{ vars.ITCH_GAME }}:windows" --userversion "$V"
+          ./butler/butler push builds/linux "${{ vars.ITCH_GAME }}:linux" --userversion "$V"

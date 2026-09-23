@@ -117,8 +117,7 @@ func _detect(p0: Vector3, p1: Vector3) -> DrumHit:
 	var best_t := INF
 	# Every piece must see every frame so it can re-arm; only the earliest
 	# crossing along the swept segment gets the hit.
-	for node in get_tree().get_nodes_in_group(DrumPiece.GROUP):
-		var piece := node as DrumPiece
+	for piece in DrumPiece.all:
 		var t := piece.find_crossing(stick_id, p0, p1)
 		if t >= 0.0 and t < best_t:
 			best_t = t

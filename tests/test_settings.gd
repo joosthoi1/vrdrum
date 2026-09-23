@@ -55,3 +55,21 @@ func test_highlight_setting() -> void:
 	check(not HitHighlight.enabled, "highlights off")
 	settings().set_value(&"highlight_hits", true)
 	check(HitHighlight.enabled, "highlights on")
+
+
+func test_graphics_settings_apply() -> void:
+	var s := settings()
+	s.set_value(&"msaa", 0)
+	check_eq(tree.root.msaa_3d, Viewport.MSAA_DISABLED, "MSAA off")
+	s.set_value(&"msaa", 9)
+	check_eq(s.get_value(&"msaa"), 3, "choice clamped")
+	check_eq(tree.root.msaa_3d, Viewport.MSAA_8X, "MSAA 8x")
+	s.set_value(&"render_scale", 0.8)
+	check_near(tree.root.scaling_3d_scale, 0.8, 1e-5, "desktop render scale")
+	var light := OmniLight3D.new()
+	light.shadow_enabled = true
+	light.add_to_group(&"shadow_lights")
+	add_node(light)
+	s.set_value(&"shadows", false)
+	check(not light.shadow_enabled, "shadows off")
+	s.reset_to_defaults()

@@ -2,11 +2,12 @@
 
 A VR drum kit built with Godot 4 and OpenXR. The main target is PSVR2 on PC through the PC adapter, which runs on SteamVR. Other OpenXR headsets should work too: Valve Index, Vive, Quest or Pico over Link, and Windows Mixed Reality.
 
-See [docs/PLAN.md](docs/PLAN.md) for the technical design and milestones.
+- **Download:** Windows and Linux builds are on the repository's Releases page once a version is tagged. [docs/PLAYING.md](docs/PLAYING.md) covers setup (including PSVR2), controls and troubleshooting.
+- **Design:** [docs/PLAN.md](docs/PLAN.md) has the technical design and milestones. See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
 
 ## Status
 
-M0 to M3 are built: project setup, one snare, the full kit, and comfort and customization.
+M0 to M4 are built: project setup, one snare, the full kit, comfort and customization, and release packaging. The version is 0.4.0.
 
 - **The kit:** kick, snare (head and rim), hi-hat, two rack toms, a floor tom, crash (bow and edge) and ride (bell, bow and edge).
 - **Sound:** recorded samples from Karoryfer's CC0 [Big Rusty Drums](https://github.com/sfzinstruments/karoryfer.big-rusty-drums), with several velocity layers and round-robin takes. In VR, each drum is heard from where it stands.
@@ -16,6 +17,8 @@ M0 to M3 are built: project setup, one snare, the full kit, and comfort and cust
 - **Highlights:** the part you hit lights up: drum head or hoop, and the cymbal's bell, bow or edge ring.
 - **Menu:** settings for hit sensitivity and dynamics, stick length and angle, and mixer volumes. Also left-handed mode (a mirrored kit with swapped pedals) and an inverted hi-hat pedal.
 - **Kit editor:** move pieces by grabbing them with a stick (VR) or dragging them (desktop). There are default and compact presets and three save slots. Your layout is restored at startup.
+- **Latency:** hits start playing in the same frame they're detected.
+- **Graphics settings:** resolution, anti-aliasing and shadows.
 - **Other:** a practice room, controller haptics, a debug overlay, and a desktop mode for testing without a headset.
 
 Nothing has been tuned on a headset yet.
@@ -67,7 +70,13 @@ godot --headless --xr-mode off --audio-driver Dummy --import
 godot --headless --xr-mode off --audio-driver Dummy --script res://tests/run_tests.gd
 ```
 
-CI runs the same commands on every push.
+CI runs the same commands on every push, plus a CPU performance smoke test:
+
+```sh
+godot --headless --xr-mode off --audio-driver Dummy --script res://tools/benchmark.gd
+```
+
+Before a release, go through [docs/TESTING.md](docs/TESTING.md) on a headset. [docs/RELEASING.md](docs/RELEASING.md) explains how to publish a version; tagging `v<version>` builds and publishes it.
 
 ## Settings and layouts
 

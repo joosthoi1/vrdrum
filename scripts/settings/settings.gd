@@ -11,6 +11,7 @@ signal changed(key: StringName, value: Variant)
 const PATH := "user://settings.cfg"
 
 ## key -> [default, min, max, step, label, tab]. Booleans have no range.
+## Choices: [default index, [option labels], null, null, label, tab].
 const SPECS := {
 	# Play
 	&"sensitivity": [1.0, 0.5, 2.0, 0.05, "Hit sensitivity", "Play"],
@@ -29,7 +30,14 @@ const SPECS := {
 	&"volume_hihat": [1.0, 0.0, 1.5, 0.05, "Hi-hat", "Sound"],
 	&"volume_cymbals": [1.0, 0.0, 1.5, 0.05, "Cymbals", "Sound"],
 	&"spatial_audio": [0.5, 0.0, 1.0, 0.05, "Spatial audio", "Sound"],
+	# Graphics
+	&"render_scale": [1.0, 0.6, 1.5, 0.05, "Resolution (VR: after restart)", "Graphics"],
+	&"msaa": [2, ["Off", "2x", "4x", "8x"], null, null, "Anti-aliasing", "Graphics"],
+	&"shadows": [true, null, null, null, "Shadows", "Graphics"],
 }
+
+## Viewport MSAA for each "msaa" choice.
+const MSAA_MODES := [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X, Viewport.MSAA_8X]
 
 ## Mixer bus for each volume setting.
 const VOLUME_BUSES := {
@@ -57,7 +65,9 @@ func get_value(key: StringName) -> Variant:
 func set_value(key: StringName, value: Variant) -> void:
 	assert(SPECS.has(key), "Unknown setting %s" % key)
 	var spec: Array = SPECS[key]
-	if spec[1] != null:
+	if spec[1] is Array:
+		value = clampi(int(value), 0, spec[1].size() - 1)
+	elif spec[1] != null:
 		value = clampf(float(value), spec[1], spec[2])
 	if _values.get(key) == value:
 		return
@@ -86,6 +96,9 @@ func load_settings() -> void:
 		if spec[0] is bool:
 			if value is bool:
 				_values[key] = value
+		elif spec[1] is Array:
+			if value is int:
+				_values[key] = clampi(value, 0, spec[1].size() - 1)
 		elif value is float or value is int:
 			_values[key] = clampf(float(value), spec[1], spec[2])
 
@@ -116,6 +129,16 @@ func _apply(key: StringName, value: Variant) -> void:
 			var audio := get_node_or_null(^"/root/DrumAudio")
 			if audio:
 				audio.spatial_strength = value
+		&"msaa":
+			get_viewport().msaa_3d = MSAA_MODES[value]
+		&"render_scale":
+			# Desktop view; in VR main.gd applies it as the OpenXR render
+			# target multiplier when the session starts.
+			if not get_viewport().use_xr:
+				get_viewport().scaling_3d_scale = value
+		&"shadows":
+			for light in get_tree().get_nodes_in_group(&"shadow_lights"):
+				(light as Light3D).shadow_enabled = value
 		_:
 			if VOLUME_BUSES.has(key):
 				var index := AudioServer.get_bus_index(VOLUME_BUSES[key])

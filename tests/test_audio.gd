@@ -135,3 +135,32 @@ func test_hit_that_chokes_cuts_the_group_first() -> void:
 	chick.chokes = &"hihat"
 	check(node.play_hit(chick) != null, "chick plays")
 	check_eq(node.choke(&"hihat"), 1, "only the chick is left ringing")
+
+
+func test_hits_pan_towards_the_drum() -> void:
+	var node := audio()
+	if node == null:
+		return
+	var camera := Camera3D.new()
+	add_node(camera)
+	camera.current = true
+	var center: int = node.PAN_STEPS.size() / 2
+	check_eq(node.pan_step_for(Vector3(0, 0, -1)), center, "straight ahead is centred")
+	check(node.pan_step_for(Vector3(-1, 0, -0.5)) < center, "left of the head pans left")
+	check(node.pan_step_for(Vector3(1, 0, -0.5)) > center, "right of the head pans right")
+	check_eq(node.pan_step_for(null), center, "no position is centred")
+	var voice: AudioStreamPlayer = node.play(&"hihat/closed", 0.5, &"hihat", Vector3(-1, 0, -0.5))
+	check(String(voice.bus).begins_with("HiHat_p"), "routed through a hi-hat pan bus, got %s" % voice.bus)
+	camera.rotation.y = PI / 2  # turn the head left: the same spot is now ahead
+	check_eq(node.pan_step_for(Vector3(-1, 0, 0)), center, "panning follows the head")
+
+
+func test_pan_buses_follow_spatial_strength() -> void:
+	var node := audio()
+	if node == null:
+		return
+	tree.root.get_node(^"Settings").set_value(&"spatial_audio", 0.8)
+	var left := AudioServer.get_bus_index(&"Toms_p0")
+	check(left != -1, "pan bus exists")
+	check_near((AudioServer.get_bus_effect(left, 0) as AudioEffectPanner).pan, -0.8, 1e-4, "hard left scaled by strength")
+	check_eq(AudioServer.get_bus_send(left), &"Toms", "pan bus feeds its group")

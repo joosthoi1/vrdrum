@@ -52,10 +52,26 @@ Your decisions:
   - The synth remains as a fallback.
 - **Hit highlights:** the zone that was hit lights up: drum head or hoop, and the cymbal's bell, bow or edge ring (hi-hat included).
 
+- **M4 (polish and release):** implemented; still needs testing on headsets.
+  - Latency: `AudioStreamPlayer3D` starts sounds on the next physics tick, which cost about one frame per hit. Voices are now plain `AudioStreamPlayer`s, which start immediately. Each is routed to one of five pre-panned buses per group, chosen from the drum's position relative to the head.
+  - Performance:
+    - Sticks scan a static piece registry instead of a group lookup.
+    - `tools/benchmark.gd` measures about 0.25 ms of game logic per frame while playing 24 hits per second, and CI fails if it goes over 1.5 ms.
+    - Graphics settings: resolution (OpenXR render target multiplier in VR), MSAA and shadows.
+  - Export:
+    - `export_presets.cfg` has Windows and Linux presets. They include `kit.json`, embed the game data, and leave out tests and tools.
+    - Both were exported locally, and the Linux build was run to confirm it loads the recorded kit.
+    - The OpenXR startup alert is off, so a machine without a headset goes straight to desktop mode.
+  - Release:
+    - `.github/workflows/release.yml` runs on `v*` tags: tests, exports, a check that the build starts, zips with the player guide, a GitHub Release, and an optional itch.io upload.
+    - Docs: `docs/PLAYING.md`, `docs/RELEASING.md`, `docs/TESTING.md` and `CHANGELOG.md`.
+  - Still to do: go through `docs/TESTING.md` on PSVR2 and other headsets, set up the itch.io page, and tag the first release.
+
 Changes from the original plan:
 - Tests use a small built-in runner (`tests/run_tests.gd`) instead of the GUT addon, so the project has no third-party dependencies.
 - Kit layouts are JSON files under `user://layouts/` rather than `.tres` resources.
-- `kit.json` (the sample manifest) is a non-resource file, so the M4 export preset must include `*.json` files.
+- `kit.json` (the sample manifest) is a non-resource file, so the export presets include `assets/kits/*/kit.json` explicitly.
+- Positional audio uses pre-panned buses rather than `AudioStreamPlayer3D`, to avoid a frame of latency.
 - Sounds are synthesized at startup (`scripts/audio/drum_synth.gd`) as placeholders. A CC0 multi-sampled kit can replace them by filling a `DrumSampleBank` with the same articulation keys (`snare/head`, `snare/rim`, ...).
 
 ---
@@ -141,7 +157,7 @@ Everything is rebindable, and left-handed kit layouts are supported.
   - pads can optionally flash, which helps with tracking and timing
 
 ## 3. Project layout (Godot 4.7)
-This layout is the target. The M0–M3 parts exist so far.
+This layout is the target. The M0–M4 parts exist so far.
 ```
 project.godot
 openxr_action_map.tres        # stick pose, triggers (kick/hh), menu, grip; multi-profile bindings

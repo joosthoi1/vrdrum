@@ -15,6 +15,10 @@ signal choked(group: StringName)
 
 const GROUP := &"drum_pieces"
 
+## Every piece currently in the scene tree. Sticks scan this every frame, so
+## it is kept up to date here rather than queried from the group each time.
+static var all: Array[DrumPiece] = []
+
 ## Global hit sensitivity from the settings: above 1, less force is needed
 ## for a loud hit.
 static var sensitivity := 1.0
@@ -48,6 +52,11 @@ var _armed := {}
 
 func _enter_tree() -> void:
 	add_to_group(GROUP)
+	all.append(self)
+
+
+func _exit_tree() -> void:
+	all.erase(self)
 
 
 func surface_normal() -> Vector3:

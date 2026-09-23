@@ -146,7 +146,7 @@ mesh = SubResource("Mesh_lamp")
 surface_material_override/0 = SubResource("Mat_lamp")
 cast_shadow = 0
 
-[node name="LampLight" type="OmniLight3D" parent="."]
+[node name="LampLight" type="OmniLight3D" parent="." groups=["shadow_lights"]]
 position = Vector3(0, 2.55, -0.6)
 light_color = Color(1, 0.9, 0.78, 1)
 light_energy = 1.6

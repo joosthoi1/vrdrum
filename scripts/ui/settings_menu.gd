@@ -34,7 +34,7 @@ func _ready() -> void:
 	add_child(root)
 
 	var title := Label.new()
-	title.text = "VR Drums"
+	title.text = "VR Drums  %s" % ProjectSettings.get_setting("application/config/version", "")
 	title.add_theme_font_size_override(&"font_size", roundi(40 * ui_scale))
 	root.add_child(title)
 
@@ -42,7 +42,7 @@ func _ready() -> void:
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(tabs)
 	var pages := {}
-	for tab_name in ["Play", "Sticks", "Sound"]:
+	for tab_name in ["Play", "Sticks", "Sound", "Graphics"]:
 		pages[tab_name] = _add_page(tabs, tab_name)
 	if _settings:
 		for key in _settings.SPECS:
@@ -93,6 +93,22 @@ func _add_setting(page: VBoxContainer, key: StringName, spec: Array) -> void:
 		check.toggled.connect(func(on: bool) -> void: _settings.set_value(key, on))
 		page.add_child(check)
 		_controls[key] = [check, null]
+		return
+	if spec[1] is Array:
+		var choice_row := HBoxContainer.new()
+		page.add_child(choice_row)
+		var choice_label := Label.new()
+		choice_label.text = spec[4]
+		choice_label.custom_minimum_size.x = 380 * ui_scale
+		choice_row.add_child(choice_label)
+		var options := OptionButton.new()
+		for option in spec[1]:
+			options.add_item(option)
+		options.selected = value
+		options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		options.item_selected.connect(func(index: int) -> void: _settings.set_value(key, index))
+		choice_row.add_child(options)
+		_controls[key] = [options, null]
 		return
 	var row := HBoxContainer.new()
 	page.add_child(row)
@@ -189,6 +205,8 @@ func _on_setting_changed(key: StringName, value: Variant) -> void:
 	var control: Control = _controls[key][0]
 	if control is CheckButton:
 		control.set_pressed_no_signal(value)
+	elif control is OptionButton:
+		control.selected = value
 	elif control is HSlider:
 		control.set_value_no_signal(value)
 		_controls[key][1].text = _format(value, control.step)
@@ -214,7 +232,7 @@ static func _make_theme(scale: float) -> Theme:
 	hover.bg_color = Color(0.3, 0.45, 0.6)
 	var pressed := button.duplicate() as StyleBoxFlat
 	pressed.bg_color = Color(0.25, 0.65, 0.85)
-	for type in [&"Button", &"CheckButton"]:
+	for type in [&"Button", &"CheckButton", &"OptionButton"]:
 		t.set_stylebox(&"normal", type, button)
 		t.set_stylebox(&"hover", type, hover)
 		t.set_stylebox(&"pressed", type, pressed)

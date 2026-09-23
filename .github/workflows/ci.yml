@@ -38,3 +38,6 @@ jobs:
         run: |
           ~/godot/godot --headless --xr-mode off --audio-driver Dummy --quit-after 300 2>&1 | tee run.log
           ! grep -E "SCRIPT ERROR|^ERROR" run.log
+
+      - name: Performance smoke test
+        run: ~/godot/godot --headless --xr-mode off --audio-driver Dummy --script res://tools/benchmark.gd

@@ -71,6 +71,10 @@ func _ready() -> void:
 		for stick in rig.sticks():
 			editor.add_hand(stick, null)
 	edit_hint.visible = false
+	# Settings loaded before this scene existed; push them to its lights etc.
+	var settings := get_node_or_null(^"/root/Settings")
+	if settings:
+		settings.apply_all()
 
 
 func is_xr() -> bool:
@@ -150,6 +154,9 @@ func _start_xr() -> bool:
 		return false
 	# The XR runtime paces frames; vsync on the mirror window would only add latency.
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	var settings := get_node_or_null(^"/root/Settings")
+	if settings:
+		xr_interface.render_target_size_multiplier = settings.get_value(&"render_scale")
 	get_viewport().use_xr = true
 	xr_interface.session_begun.connect(_on_session_begun)
 	return true
