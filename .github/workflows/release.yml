@@ -25,7 +25,7 @@ jobs:
       # Job level, so the itch.io step's condition can see whether it is set.
       BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Godot and export templates
         id: cache-godot
