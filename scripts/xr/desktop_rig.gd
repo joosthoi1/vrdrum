@@ -25,6 +25,9 @@ var aim_normal := Vector3.UP
 ## Per stick: time into the current stroke (INF = idle) and its down time.
 var _stroke_t: Array[float] = [INF, INF]
 var _stroke_down: Array[float] = [0.03, 0.03]
+## Time into a sticks-together tap (INF = idle) and its closing time.
+var _tap_t := INF
+var _tap_down := 0.03
 ## Per stick: aim point and normal locked in when its stroke started.
 var _stroke_aim: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
 var _stroke_normal: Array[Vector3] = [Vector3.UP, Vector3.UP]
@@ -64,6 +67,12 @@ func strike(index: int, soft: bool = false) -> void:
 	_stroke_down[index] = soft_stroke_down_time if soft else stroke_down_time
 
 
+## Brings the idle sticks together sideways until they touch, then apart.
+func tap_sticks(soft: bool = false) -> void:
+	_tap_t = 0.0
+	_tap_down = soft_stroke_down_time if soft else stroke_down_time
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not input_enabled:
 		return
@@ -77,10 +86,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			strike(1, event.shift_pressed)
 		elif event.keycode == KEY_F:
 			strike(0, event.shift_pressed)
+		elif event.keycode == KEY_C:
+			tap_sticks(event.shift_pressed)
 
 
 func _process(delta: float) -> void:
 	_update_aim()
+	_advance_tap(delta)
 	for i in _sticks.size():
 		_place_tip(i, _tip_target(i, _advance_stroke(i, delta)))
 
@@ -114,8 +126,29 @@ func _tip_target(i: int, height: float) -> Vector3:
 	if _stroke_t[i] != INF:
 		return _stroke_aim[i] + _stroke_normal[i] * height
 	var target := aim + aim_normal * height
-	target.x += (-1.0 if i == 0 else 1.0) * stick_spacing
+	target.x += (-1.0 if i == 0 else 1.0) * _spacing()
 	return target
+
+
+## Half the gap between the idle sticks: normally [member stick_spacing],
+## closing to nearly touching during a tap.
+func _spacing() -> float:
+	const TOUCH := 0.004
+	if _tap_t == INF:
+		return stick_spacing
+	if _tap_t < _tap_down:
+		return lerpf(stick_spacing, TOUCH, _tap_t / _tap_down)
+	return lerpf(TOUCH, stick_spacing, clampf((_tap_t - _tap_down) / stroke_up_time, 0.0, 1.0))
+
+
+func _advance_tap(delta: float) -> void:
+	if _tap_t == INF:
+		return
+	var t := _tap_t + delta
+	# Like strokes: always reach the touching point, even on a slow frame.
+	if _tap_t < _tap_down and t >= _tap_down:
+		t = _tap_down
+	_tap_t = t if t < _tap_down + stroke_up_time else INF
 
 
 ## Moves a stick so its tip is at [param tip]. Sideways moves (re-aiming)

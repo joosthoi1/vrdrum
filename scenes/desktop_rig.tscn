@@ -37,4 +37,4 @@ offset_bottom = -16.0
 grow_vertical = 0
 text = "Desktop mode (no headset found). Point at a drum or cymbal.
 Left click / J: right stick    Right click / F: left stick    Hold Shift: soft
-Space: kick    Hold V: close hi-hat    F3: debug overlay"
+Space: kick    Hold V: close hi-hat    C: tap sticks    Esc: menu    F3: debug"

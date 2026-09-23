@@ -11,7 +11,7 @@ extends RefCounted
 ## sound design changes to invalidate old caches.
 
 const MIX_RATE := 48000
-const VERSION := 3
+const VERSION := 4
 const CACHE_DIR := "user://synth_cache"
 
 ## Inharmonic square-wave partials (TR-808 style) for metallic sounds.
@@ -38,6 +38,7 @@ static func articulations() -> Array:
 		[&"ride/bow", 3, 2],
 		[&"ride/bell", 2, 1],
 		[&"ride/edge", 2, 1],
+		[&"sticks/click", 3, 2],
 	]
 
 
@@ -171,6 +172,14 @@ static func params_for(articulation: StringName, brightness: float, variation: i
 				"noise_amp": 0.9, "noise_decay": 1.4,
 				"noise_cutoff": lerpf(6000.0, 10000.0, brightness), "noise_highpass": 2500.0,
 				"click_amp": 0.2,
+			}
+		&"sticks/click":
+			return {
+				"duration": 0.12,
+				"tones": [[2500.0 * detune, 0.5, 0.015], [3900.0 * detune, 0.3, 0.01]],
+				"noise_amp": 0.6, "noise_decay": 0.012,
+				"noise_cutoff": lerpf(7000.0, 12000.0, brightness), "noise_highpass": 1500.0,
+				"click_amp": 0.5,
 			}
 	push_error("No synth parameters for %s" % articulation)
 	return {"duration": 0.1}

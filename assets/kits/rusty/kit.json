@@ -367,6 +367,31 @@
     ]
    ]
   },
+  "sticks/click": {
+   "gain_db": -0.9,
+   "layers": [
+    [
+     "sticks_click_v1_rr1.wav",
+     "sticks_click_v1_rr3.wav",
+     "sticks_click_v1_rr4.wav"
+    ],
+    [
+     "sticks_click_v2_rr1.wav",
+     "sticks_click_v2_rr3.wav",
+     "sticks_click_v2_rr4.wav"
+    ],
+    [
+     "sticks_click_v3_rr1.wav",
+     "sticks_click_v3_rr3.wav",
+     "sticks_click_v3_rr4.wav"
+    ],
+    [
+     "sticks_click_v4_rr1.wav",
+     "sticks_click_v4_rr3.wav",
+     "sticks_click_v4_rr4.wav"
+    ]
+   ]
+  },
   "crash/edge": {
    "gain_db": -1.68,
    "layers": [

@@ -24,6 +24,7 @@ If no headset is found, the game opens in a desktop window instead, which is han
 | Right trigger | Kick drum |
 | Left trigger (hold) | Close the hi-hat; half-pressed is half-open |
 | Hand on a cymbal's edge | Stop the cymbal ringing |
+| Tap the sticks together | Stick click, e.g. to count in (Menu → Play to turn off) |
 | A / X or the menu button | Menu, or leave the kit editor |
 | Point a stick at the menu, pull the trigger | Click |
 | B / Y | Move the kit to just below where you hold your sticks |
@@ -43,7 +44,7 @@ Your settings and layout are saved automatically.
 
 ## Desktop mode
 
-Point at a drum or cymbal with the mouse. Left click (or J) plays the right stick and right click (or F) the left stick; hold Shift for a soft hit. Space is the kick and V (hold) closes the hi-hat. Esc opens the menu.
+Point at a drum or cymbal with the mouse. Left click (or J) plays the right stick and right click (or F) the left stick; hold Shift for a soft hit. Space is the kick, V (hold) closes the hi-hat and C taps the sticks together. Esc opens the menu.
 
 ## Troubleshooting
 

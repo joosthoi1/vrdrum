@@ -66,6 +66,10 @@ Your decisions:
     - `.github/workflows/release.yml` runs on `v*` tags: tests, exports, a check that the build starts, zips with the player guide, a GitHub Release, and an optional itch.io upload.
     - Docs: `docs/PLAYING.md`, `docs/RELEASING.md`, `docs/TESTING.md` and `CHANGELOG.md`.
   - Still to do: go through `docs/TESTING.md` on PSVR2 and other headsets, set up the itch.io page, and tag the first release.
+- **Stick clicks:** tap the sticks together for a click (`StickClicker`).
+  - Detection: each stick is a segment from butt to tip. It checks closest-point contact within 1.8 cm, plus a swept pass-through test, so fast taps aren't missed.
+  - Loudness comes from the two sticks' relative speed.
+  - The sound is Big Rusty Drums' 14" tom shell click, high-passed and shortened by `tools/build_sample_kit.py`, so it plays as a dry wood-on-wood tick.
 
 Changes from the original plan:
 - Tests use a small built-in runner (`tests/run_tests.gd`) instead of the GUT addon, so the project has no third-party dependencies.

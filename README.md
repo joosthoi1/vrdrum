@@ -41,6 +41,7 @@ VR controls:
 | Right trigger | Kick (left trigger in left-handed mode) |
 | Left trigger (hold) | Close the hi-hat (half-pressed = half-open) |
 | Hand on a cymbal's edge | Choke the cymbal |
+| Tap the sticks together | Stick click (count-ins), can be turned off in the menu |
 | A / X or the menu button | Open or close the menu, or leave the kit editor |
 | Point a stick at the menu + trigger | Click |
 | In the kit editor: touch a piece + hold trigger | Move it |
@@ -57,6 +58,7 @@ With no headset (or when launched with `-- --desktop`), you get a desktop view:
 | Hold `Shift` | Soft stroke |
 | `Space` | Kick |
 | Hold `V` | Close the hi-hat |
+| `C` (Shift = soft) | Tap the sticks together |
 | `F3` | Debug overlay |
 | `Esc` | Open or close the menu, or leave the kit editor |
 | In the kit editor: drag / scroll / `Shift`+scroll | Move / raise or lower / tilt a piece |

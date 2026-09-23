@@ -59,3 +59,24 @@ func test_intensity_is_monotonic() -> void:
 		var v := HitMath.intensity_from_speed(i * 0.1, 0.25, 7.0, 0.8)
 		check(v >= last, "decreased at speed %.1f" % (i * 0.1))
 		last = v
+
+
+func test_closest_points_of_crossing_segments() -> void:
+	# An X: one segment along x at y=0, the other along z at y=0.1.
+	var st := HitMath.closest_segment_params(Vector3(-1, 0, 0), Vector3(1, 0, 0), Vector3(0, 0.1, -1), Vector3(0, 0.1, 1))
+	check_near(st.x, 0.5, 1e-6, "middle of the first")
+	check_near(st.y, 0.5, 1e-6, "middle of the second")
+
+
+func test_closest_points_clamp_to_segment_ends() -> void:
+	# The second segment starts beyond the end of the first.
+	var st := HitMath.closest_segment_params(Vector3.ZERO, Vector3(1, 0, 0), Vector3(2, 0, -1), Vector3(2, 0, 1))
+	check_near(st.x, 1.0, 1e-6, "clamped to the end")
+	check_near(st.y, 0.5, 1e-6)
+
+
+func test_closest_points_parallel_segments() -> void:
+	var st := HitMath.closest_segment_params(Vector3.ZERO, Vector3(0, 0, 1), Vector3(0.1, 0, 0), Vector3(0.1, 0, 1))
+	var p := Vector3.ZERO.lerp(Vector3(0, 0, 1), st.x)
+	var q := Vector3(0.1, 0, 0).lerp(Vector3(0.1, 0, 1), st.y)
+	check_near(p.distance_to(q), 0.1, 1e-6, "distance between parallel segments")

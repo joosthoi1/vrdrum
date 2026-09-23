@@ -18,6 +18,7 @@ var menu_panel: UiPanel3D
 ## Desktop only: the overlay layer the menu is shown on.
 var menu_layer: CanvasLayer
 var editor: KitEditor
+var stick_clicker: StickClicker
 
 @onready var kit: DrumKit = $DrumKit
 @onready var debug_overlay: Label3D = $DebugOverlay
@@ -71,6 +72,11 @@ func _ready() -> void:
 		for stick in rig.sticks():
 			editor.add_hand(stick, null)
 	edit_hint.visible = false
+	stick_clicker = StickClicker.new()
+	stick_clicker.name = "StickClicker"
+	stick_clicker.sticks = rig.sticks()
+	stick_clicker.kit = kit
+	add_child(stick_clicker)
 	# Settings loaded before this scene existed; push them to its lights etc.
 	var settings := get_node_or_null(^"/root/Settings")
 	if settings:

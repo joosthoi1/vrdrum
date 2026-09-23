@@ -42,3 +42,35 @@ static func intensity_from_speed(speed: float, min_speed: float, max_speed: floa
 		return 0.0 if speed <= min_speed else 1.0
 	var x := clampf((speed - min_speed) / (max_speed - min_speed), 0.0, 1.0)
 	return pow(x, exponent)
+
+
+## Closest points between segments [param p1]->[param q1] and
+## [param p2]->[param q2], as Vector2(s, t): the fractions along each segment
+## (both clamped to 0..1). Handles parallel and degenerate segments.
+## (Ericson, Real-Time Collision Detection, 5.1.9.)
+static func closest_segment_params(p1: Vector3, q1: Vector3, p2: Vector3, q2: Vector3) -> Vector2:
+	var d1 := q1 - p1
+	var d2 := q2 - p2
+	var r := p1 - p2
+	var a := d1.dot(d1)
+	var e := d2.dot(d2)
+	var f := d2.dot(r)
+	const EPSILON := 1e-9
+	if a <= EPSILON and e <= EPSILON:
+		return Vector2.ZERO
+	if a <= EPSILON:
+		return Vector2(0.0, clampf(f / e, 0.0, 1.0))
+	var c := d1.dot(r)
+	if e <= EPSILON:
+		return Vector2(clampf(-c / a, 0.0, 1.0), 0.0)
+	var b := d1.dot(d2)
+	var denom := a * e - b * b
+	var s := clampf((b * f - c * e) / denom, 0.0, 1.0) if denom > EPSILON else 0.0
+	var t := (b * s + f) / e
+	if t < 0.0:
+		t = 0.0
+		s = clampf(-c / a, 0.0, 1.0)
+	elif t > 1.0:
+		t = 1.0
+		s = clampf((b - c) / a, 0.0, 1.0)
+	return Vector2(s, t)

@@ -57,18 +57,27 @@ ARTICULATIONS = {
     "ride/bow": ("ride_22/rd", CYMBAL, 5, 2, 3.0),
     "ride/bell": ("ride_22/bl", CYMBAL, 4, 2, 3.5),
     "ride/edge": ("ride_22/ed", CYMBAL, 4, 2, 3.5),
+    # Sticks tapped together: there is no stick-on-stick recording, so use
+    # the 14" tom's shell clicks (stick on wooden shell), shaped below.
+    "sticks/click": ("tom_14/sc", {"cl": 1.0}, 4, 3, 0.3),
 }
+
+# Extra shaping per articulation: high-pass (Hz) and an exponential decay
+# (seconds) applied after the first 8 ms. Turns the shell click into a dry
+# wood-on-wood tick without the drum's ring.
+SHAPING = {"sticks/click": {"highpass": 700.0, "decay": 0.035}}
 
 # Articulations that share another's samples (the kit has one crash articulation).
 ALIASES = {"crash/edge": "crash/bow"}
 
 # The articulation each piece is balanced by.
 MAIN = {"kick": "kick/head", "snare": "snare/head", "tom1": "tom1/head", "tom2": "tom2/head",
-        "tom3": "tom3/head", "hihat": "hihat/closed", "crash": "crash/bow", "ride": "ride/bow"}
+        "tom3": "tom3/head", "hihat": "hihat/closed", "crash": "crash/bow", "ride": "ride/bow",
+        "sticks": "sticks/click"}
 
 # Loudness targets relative to the drums (dB): cymbals sit a little lower in
 # a natural kit balance.
-LOUDNESS_OFFSET = {"hihat": -3.0, "crash": -4.0, "ride": -5.0}
+LOUDNESS_OFFSET = {"hihat": -3.0, "crash": -4.0, "ride": -5.0, "sticks": -8.0}
 
 TAIL_FLOOR_DB = -70.0   # trim tails below this, relative to the piece's peak
 ONSET_DB = -45.0        # onset: first sample above this, relative to the take's own peak
@@ -102,6 +111,32 @@ def mix_take(folder: Path, mics: dict, layer: int, rr: int) -> tuple:
             n = max(len(mixed), len(data))
             mixed = np.pad(mixed, (0, n - len(mixed))) + np.pad(data, (0, n - len(data)))
     return mixed, rate
+
+
+def highpass(x: np.ndarray, rate: int, cutoff: float) -> np.ndarray:
+    """Two cascaded 2nd-order Butterworth high-pass biquads (24 dB/octave)."""
+    w = 2 * np.pi * cutoff / rate
+    alpha = np.sin(w) / np.sqrt(2)
+    b = np.array([(1 + np.cos(w)) / 2, -(1 + np.cos(w)), (1 + np.cos(w)) / 2]) / (1 + alpha)
+    a = np.array([1.0, -2 * np.cos(w), 1 - alpha]) / (1 + alpha)
+    for _ in range(2):
+        y = np.zeros_like(x)
+        x1 = x2 = y1 = y2 = 0.0
+        for i, v in enumerate(x):
+            out = b[0] * v + b[1] * x1 + b[2] * x2 - a[1] * y1 - a[2] * y2
+            x2, x1, y2, y1 = x1, v, y1, out
+            y[i] = out
+        x = y
+    return x
+
+
+def shape(x: np.ndarray, rate: int, spec: dict) -> np.ndarray:
+    if "highpass" in spec:
+        x = highpass(x, rate, spec["highpass"])
+    if "decay" in spec:
+        t = np.arange(len(x)) / rate
+        x = x * np.where(t < 0.008, 1.0, np.exp(-(t - 0.008) / spec["decay"]))
+    return x
 
 
 def envelope(x: np.ndarray, rate: int) -> np.ndarray:
@@ -140,9 +175,11 @@ def short_term_rms(x: np.ndarray, rate: int) -> float:
 
 
 def main(source: Path) -> None:
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir(parents=True)
+    # Replace only what this script generates; keep README.md and Godot's
+    # .import files for samples that still exist.
+    OUT.mkdir(parents=True, exist_ok=True)
+    for old in list(OUT.glob("*.wav")) + [OUT / "kit.json"]:
+        old.unlink(missing_ok=True)
     manifest = {"source": "Karoryfer Samples - Big Rusty Drums (CC0 1.0)",
                 "url": "https://github.com/sfzinstruments/karoryfer.big-rusty-drums",
                 "articulations": {}}
@@ -155,7 +192,10 @@ def main(source: Path) -> None:
         takes = {}
         for layer in layers:
             for rr in pick(sorted(files[layer]), n_rr):
-                takes[(layer, rr)] = mix_take(folder, mics, layer, rr)
+                x, rate = mix_take(folder, mics, layer, rr)
+                if articulation in SHAPING:
+                    x = shape(x, rate, SHAPING[articulation])
+                takes[(layer, rr)] = (x, rate)
         rendered[articulation] = (layers, takes, max_s)
         takes_by_piece.setdefault(articulation.split("/")[0], []).extend(x for x, _ in takes.values())
 
@@ -197,6 +237,9 @@ def main(source: Path) -> None:
         manifest["articulations"][alias] = manifest["articulations"][original]
     (OUT / "kit.json").write_text(json.dumps(manifest, indent=1) + "\n")
     shutil.copy(source / "LICENSE", OUT / "LICENSE")
+    for stale in OUT.glob("*.wav.import"):
+        if not stale.with_suffix("").exists():
+            stale.unlink()
     print(f"total {total / 1e6:.1f} MB")
 
 

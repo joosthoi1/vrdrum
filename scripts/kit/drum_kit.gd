@@ -144,6 +144,12 @@ func _collect_pieces(node: Node, out: Array[DrumPiece]) -> void:
 		_collect_pieces(child, out)
 
 
+## Plays and announces a hit that doesn't come from a kit piece (the sticks
+## clicked together).
+func play_external_hit(h: DrumHit) -> void:
+	_on_piece_hit(h)
+
+
 func _on_piece_hit(h: DrumHit) -> void:
 	if audio:
 		audio.play_hit(h)

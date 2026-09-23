@@ -8,6 +8,9 @@ extends Node3D
 
 signal struck(hit: DrumHit)
 
+## Distance from the grip back to the butt end of the stick, in metres.
+const BUTT := 0.08
+
 @export var stick_id := 0
 ## Pitch of the stick relative to the controller grip pose, in degrees.
 ## Negative tilts the tip down.
@@ -36,6 +39,7 @@ var tip_velocity := Vector3.ZERO
 
 var _prev_tip := Vector3.ZERO
 var _has_prev := false
+var _highlight: HitHighlight
 
 @onready var _tip: Node3D = $Tip
 
@@ -44,6 +48,9 @@ func _ready() -> void:
 	rotation_degrees.x = grip_pitch_degrees
 	# Run after whatever drives the stick (desktop rig, XR controller updates).
 	process_priority = 100
+	var mesh := get_node_or_null(^"Mesh") as MeshInstance3D
+	if mesh:
+		_highlight = HitHighlight.new(mesh)
 	var settings := get_node_or_null(^"/root/Settings")
 	if follow_settings and settings:
 		length = settings.get_value(&"stick_length")
@@ -59,6 +66,17 @@ func _process(delta: float) -> void:
 
 func tip_position() -> Vector3:
 	return _tip.global_position
+
+
+## World position of the butt end (the stick runs from here to the tip).
+func butt_position() -> Vector3:
+	return to_global(Vector3(0, 0, BUTT))
+
+
+## Lights up the stick briefly, e.g. when it clicks against the other one.
+func flash(intensity: float) -> void:
+	if _highlight:
+		_highlight.flash(self, intensity)
 
 
 ## Advances tip tracking by one frame and detects strikes. Public so tests can
@@ -90,9 +108,9 @@ func _apply_length() -> void:
 		tip.position = Vector3(0, 0, -length)
 	if mesh and mesh.mesh is CylinderMesh:
 		var cylinder := (mesh.mesh as CylinderMesh).duplicate() as CylinderMesh
-		cylinder.height = length + 0.08
+		cylinder.height = length + BUTT
 		mesh.mesh = cylinder
-		mesh.position = Vector3(0, 0, (0.08 - length) / 2.0)
+		mesh.position = Vector3(0, 0, (BUTT - length) / 2.0)
 	reset_tracking()
 
 
@@ -126,12 +144,13 @@ func _detect(p0: Vector3, p1: Vector3) -> DrumHit:
 		return null
 	var h := best.register_hit(stick_id, p0.lerp(p1, best_t), tip_velocity)
 	if h:
-		_pulse(h.intensity)
+		pulse(h.intensity)
 		struck.emit(h)
 	return h
 
 
-func _pulse(intensity: float) -> void:
+## Controller vibration scaled by [param intensity] (VR only).
+func pulse(intensity: float) -> void:
 	var controller := get_parent() as XRNode3D
 	if haptics_enabled and controller:
 		controller.trigger_haptic_pulse(&"haptic", 0.0, lerpf(0.2, 1.0, intensity), haptic_duration, 0.0)

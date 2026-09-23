@@ -19,6 +19,7 @@ const SPECS := {
 	&"highlight_hits": [true, null, null, null, "Highlight hits", "Play"],
 	&"left_handed": [false, null, null, null, "Left-handed kit", "Play"],
 	&"hihat_invert": [false, null, null, null, "Hi-hat pedal: press to open", "Play"],
+	&"stick_clicks": [true, null, null, null, "Tap sticks together to click", "Play"],
 	# Sticks
 	&"stick_length": [0.32, 0.22, 0.42, 0.01, "Stick length (m)", "Sticks"],
 	&"stick_angle": [-15.0, -50.0, 30.0, 1.0, "Stick angle (°)", "Sticks"],

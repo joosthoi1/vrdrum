@@ -2,6 +2,7 @@
 
 ## 0.4.0
 
+- Tap the sticks together for a stick click, e.g. to count in. It's detected even for fast taps, gets louder the harder you tap, and vibrates and lights up both sticks. You can turn it off under Menu → Play.
 - Hits start playing the moment they're detected. Positional audio used to add a frame of delay; hits are now panned through pre-panned mixer buses instead.
 - Graphics settings: resolution (VR: after a restart), anti-aliasing and shadows.
 - Windows and Linux builds, published by the release workflow.

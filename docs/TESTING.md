@@ -18,6 +18,7 @@ Run through this on each headset before a release. Turn on the debug overlay (th
 - [ ] Hi-hat: closed, half-open and open follow the left trigger; closing it plays the "chick" and cuts the open hat.
 - [ ] Kick on the right trigger: soft squeeze is quiet, fast squeeze is loud.
 - [ ] Touching a cymbal's edge with your hand stops it ringing.
+- [ ] Tapping the sticks together clicks once per tap, louder when harder. Crossing over for the hi-hat never clicks by accident.
 - [ ] Hits feel on time. Film the controller hitting a table while recording the game's audio, and check the delay; aim for under 30 ms.
 - [ ] Sounds come from where the drums are: turn your head and the ride moves in the stereo image.
 

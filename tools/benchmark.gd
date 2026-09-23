@@ -50,6 +50,7 @@ func _process(_delta: float) -> bool:
 	_main.rig._process(DT)
 	for stick in _main.rig.sticks():
 		stick.step(DT)
+	_main.stick_clicker.step(DT)
 	_main.pedals.step(DT)
 	for piece in _main.kit.pieces():
 		for child in piece.get_children():
